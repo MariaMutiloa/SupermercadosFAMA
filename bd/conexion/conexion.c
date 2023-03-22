@@ -1,6 +1,6 @@
 #include "./sqlite/sqlite3.h"
 #include "conexion.h"
-#include <stdio>
+#include <stdio.h>
 
 sqlite3 *db;
 

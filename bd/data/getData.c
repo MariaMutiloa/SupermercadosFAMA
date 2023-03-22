@@ -4,6 +4,7 @@
 #include "getData.h"
 #include <string.h>
 #include <stdlib.h>
+#include "struct.h"
 
 char * getCliente (char * dni){
     int rc;
