@@ -29,9 +29,7 @@
 			scanf("%d", &pro);
 	}
 
-	
 
-		
 	int main (void){
 			
 		void principio(){
@@ -57,7 +55,7 @@
 								system("cls");
 								printf("Has metido Fanta de Naranja a la cesta");
 								
-							}while(pro != 9);
+							}while (pro != 9);
 
 						case  3:
 							do{
