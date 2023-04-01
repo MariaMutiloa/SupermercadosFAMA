@@ -2,6 +2,7 @@
 #include "../bd/conexion/conexion.h"
 #include "../bd/data/getData.h"
 #include "menuAdministrador.h"
+#include "menuCliente.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -68,7 +69,7 @@ int main(){
     
     if (validarCliente(dni, contrasena)) {
         printf("Bienvenido, cliente!\n");
-        // Mostrar menú de cliente
+        cliente_menu();
        
     } else if (validarAdministrador(dni, contrasena)) {
         printf("Bienvenido, administrador!\n");
