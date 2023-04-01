@@ -22,11 +22,12 @@ void admin_menu() {
             case 1:
                 // añadir clientes a la base de datos
                 printf("Añadir cliente a la base de datos\n");
-                agregar_cliente();
+                agregarCliente();
                 break;
             case 2:
                 // eliminar cuentas de clientes
                 printf("Eliminar cuenta de cliente\n");
+                eliminarCliente();
                 break;
             case 3:
                 // añadir productos mediante compras a los proveedores

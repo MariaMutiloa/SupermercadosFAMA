@@ -77,7 +77,7 @@ void insertar_cliente(sqlite3* db, Cliente cliente) {
 
 }
 
-void agregar_cliente() {
+void agregarCliente() {
     
     Cliente cliente;
 
@@ -151,4 +151,75 @@ void agregar_cliente() {
     printf("Cliente agregado exitosamente a la base de datos\n");
 }
 
+void eliminarCliente() {
+    sqlite3* db;
+    char dni[10];
+    char query[100];
+    sqlite3_stmt* stmt;
+    int result;
 
+    // Conexion a la base de datos
+    result = startConn(&db);
+
+    if (!result) {
+        fprintf(stderr, "Error conectando a la base de datos\n");
+        return;
+    }
+
+    // Pedimos el DNI del cliente
+    printf("Introduce el DNI del cliente que quiere eliminar: ");
+    fgets(dni, 10, stdin);
+    sscanf(dni, "%s", dni);
+
+    // Creamos la consulta SQL para buscar al cliente
+    sprintf(query, "SELECT * FROM cliente WHERE dni = '%s'", dni);
+
+    // Compila la consulta SQL
+    result = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+
+    // Verifica si se pudo compilar la consulta SQL
+    if (result != SQLITE_OK) {
+        fprintf(stderr, "Error preparando la consulta: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    // Ejecuta la consulta SQL
+    result = sqlite3_step(stmt);
+
+    // Verifica si se encontró al cliente
+    if (result == SQLITE_ROW) {
+        // Creamos la consulta SQL para eliminar al cliente
+        sprintf(query, "DELETE FROM cliente WHERE dni = '%s'", dni);
+
+        // Compila la consulta SQL
+        result = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+
+        // Verifica si se pudo compilar la consulta SQL
+        if (result != SQLITE_OK) {
+            fprintf(stderr, "Error preparando la consulta: %s\n", sqlite3_errmsg(db));
+            sqlite3_close(db);
+            return;
+        }
+
+        // Ejecuta la consulta SQL
+        result = sqlite3_step(stmt);
+
+        // Verifica si se eliminó al cliente
+        if (result != SQLITE_DONE) {
+            fprintf(stderr, "Error eliminando al cliente: %s\n", sqlite3_errmsg(db));
+            sqlite3_close(db);
+            return;
+        }
+
+        printf("Cliente eliminado correctamente\n");
+    } else {
+        printf("Cliente no encontrado\n");
+    }
+
+    // Libera la memoria del statement
+    sqlite3_finalize(stmt);
+
+    // Cierra la conexión a la base de datos
+    sqlite3_close(db);
+}
