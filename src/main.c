@@ -1,4 +1,4 @@
-#include "../sqLite/sqlite3.h"
+#include "../bd/sqlite3.h"
 #include "../bd/conexion/conexion.h"
 #include "../bd/data/getData.h"
 #include "menuAdministrador.h"

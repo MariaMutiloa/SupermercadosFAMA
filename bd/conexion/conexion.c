@@ -1,4 +1,4 @@
-#include "../sqLite/sqlite3.h"
+#include "../bd/sqlite3.h"
 #include "conexion.h"
 #include <stdio.h>
 
