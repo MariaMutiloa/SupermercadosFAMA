@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include "menuAdministrador.h"
+#include "../bd/data/getData.h"
 
 void admin_menu() {
     char input[256];
@@ -20,6 +22,7 @@ void admin_menu() {
             case 1:
                 // añadir clientes a la base de datos
                 printf("Añadir cliente a la base de datos\n");
+                agregar_cliente();
                 break;
             case 2:
                 // eliminar cuentas de clientes

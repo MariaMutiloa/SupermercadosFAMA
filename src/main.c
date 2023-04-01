@@ -1,8 +1,10 @@
 #include "../sqLite/sqlite3.h"
 #include "../bd/conexion/conexion.h"
 #include "../bd/data/getData.h"
+#include "menuAdministrador.h"
 #include <stdio.h>
 #include <stdlib.h>
+
 sqlite3 *db;
 
 int main(){
@@ -26,7 +28,7 @@ int main(){
        
     } else if (validarAdministrador(dni, contrasena)) {
         printf("Bienvenido, administrador!\n");
-        // Mostrar menú de administrador
+        admin_menu;
     
     } else {
         printf("Usuario o contraseña incorrectos.\n");
