@@ -18,19 +18,19 @@ void admin_menu() {
 
         switch (choice) {
             case 1:
-                // Lógica para añadir clientes a la base de datos
+                // añadir clientes a la base de datos
                 printf("Añadir cliente a la base de datos\n");
                 break;
             case 2:
-                // Lógica para eliminar cuentas de clientes
+                // eliminar cuentas de clientes
                 printf("Eliminar cuenta de cliente\n");
                 break;
             case 3:
-                // Lógica para añadir productos mediante compras a los proveedores
+                // añadir productos mediante compras a los proveedores
                 printf("Añadir productos por compras a proveedores\n");
                 break;
             case 4:
-                // Lógica para visualizar compras realizadas por todos los clientes
+                // visualizar compras realizadas por todos los clientes
                 printf("Visualizar compras realizadas por todos los clientes\n");
                 break;
             case 5:
