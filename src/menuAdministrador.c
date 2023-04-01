@@ -36,6 +36,7 @@ void admin_menu() {
             case 4:
                 // visualizar compras realizadas por todos los clientes
                 printf("Visualizar compras realizadas por todos los clientes\n");
+                imprimirCompras();
                 break;
             case 5:
                 printf("Salir del programa\n");
@@ -46,3 +47,4 @@ void admin_menu() {
         }
     } while (choice != 5);
 }
+

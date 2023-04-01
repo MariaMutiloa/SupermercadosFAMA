@@ -58,24 +58,6 @@ int validarAdministrador(char dni[], char contrasena[]) {
     }
 }
 
-void insertar_cliente(sqlite3* db, Cliente cliente) {
-    char sql[256];
-    sqlite3_stmt* stmt;
-
-    //  consulta SQL
-    sprintf(sql, "INSERT INTO cliente (dni, Nombre, Apellido, Direccion_Domicilio, Correo_electronico, Tarjeta, Contrasena) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s');",
-        cliente.dni, cliente.nombre, cliente.apellido, cliente.direccion, cliente.correo, cliente.num_tarjeta, cliente.contrasena);
-
-    // Preparar la consulta SQL
-    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    // Ejecutar la consulta SQL
-    sqlite3_step(stmt);
-
-    // Liberar los recursos
-    sqlite3_finalize(stmt);
-
-}
 
 void agregarCliente() {
     
@@ -223,3 +205,51 @@ void eliminarCliente() {
     // Cierra la conexión a la base de datos
     sqlite3_close(db);
 }
+
+void imprimirCompras() {
+    if (!startConn()) {
+        fprintf(stderr, "Error al conectar con la base de datos\n");
+        return;
+    }
+
+    char *query = "SELECT c.Nombre, c.Apellido, p.Cod_ped, p.Importe, GROUP_CONCAT(pr.cod_prod || ' - ' || pr.descripcion, '; ') as Productos \
+                   FROM cliente c, pedidoCliente p, pedidoCliente_productos pp, productos pr \
+                   WHERE c.dni = p.dni AND p.Cod_ped = pp.cod_ped AND pp.cod_prod = pr.cod_prod \
+                   GROUP BY c.Nombre, c.Apellido, p.Cod_ped";
+
+    sqlite3_stmt *stmt;
+
+    int rc = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Error en la preparacion del statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    printf("Compras realizadas por los clientes:\n\n");
+
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        char *nombre = (char *)sqlite3_column_text(stmt, 0);
+        char *apellido = (char *)sqlite3_column_text(stmt, 1);
+        int cod_ped = sqlite3_column_int(stmt, 2);
+        int importe = sqlite3_column_int(stmt, 3);
+        char *productos = (char *)sqlite3_column_text(stmt, 4);
+
+        printf("Cliente: %s %s\n", nombre, apellido);
+        printf("Codigo de pedido: %d\n", cod_ped);
+        printf("Productos: %s\n", productos);
+        printf("Importe: %d\n\n", importe);
+    }
+
+    if (rc != SQLITE_DONE) {
+        fprintf(stderr, "Error en la ejecucion de la consulta: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
+

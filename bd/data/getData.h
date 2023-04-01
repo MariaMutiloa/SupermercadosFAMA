@@ -4,8 +4,8 @@
 
 int validarCliente(char dni[], char contrasena[]);
 int validarAdministrador(char dni[], char contrasena[]);
-void insertar_cliente(sqlite3* db, Cliente cliente);
 void agregarCliente();
 void eliminarCliente();
+void imprimirCompras();
 
 #endif
