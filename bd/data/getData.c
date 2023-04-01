@@ -1,4 +1,4 @@
-#include "./sqlite/sqlite3.h"
+#include "../sqLite/sqlite3.h"
 #include "conexion.h"
 #include <stdio.h>
 #include "getData.h"
@@ -6,62 +6,54 @@
 #include <stdlib.h>
 #include "struct.h"
 
-char * getCliente (char * dni){
-    int rc;
-    char *err_msg = 0;
-    sqlite3_stmt *res;
-    char * nombre;
-    nombre = (char *) malloc (15* sizeof(char));
+sqlite3 *db;
 
-    char * sql = "SELECT *FROM CLIENTE WHERE " dni = ?"";
-
-    rc = sqlite3_prepare_v2(db, sql, -1, &res,0);
-
-    if(rc == SQLITE_OK){
-        sqlite3_bind_text(res, 1, dni, sizeof(*dni), SQLITE_STATIC);
+// Función para validar si el usuario es un cliente y si la contraseña es correcta
+int validarCliente(char dni[], char contrasena[]) {
+    // Preparar la consulta SQL
+    char sql[200];
+    snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
+    
+    // Ejecutar la consulta y comprobar el resultado
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+    
+    if (rc != SQLITE_OK) {
+        printf("Error al ejecutar la consulta: %s\n", sqlite3_errmsg(db));
+        return 0;
     }
-    else{
-        fprintf(stderr,"Failed to execute statement: %s\n", sqlite3_errmsg(db));
+    
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW) {
+        // El usuario existe y la contraseña es correcta
+        return 1;
+    } else {
+        // El usuario no existe o la contraseña es incorrecta
+        return 0;
     }
-
-    int step = sqlite3_step(res);
-
-    if(step == SQLITE_ROW){
-        strcpy(nombre, (const char *) sqlite3_column_text(res,0));
-    }
-
-    else{
-        printf("No results foudn")
-    }
-    return nombre;
 }
 
-char * getAdministrador (char * dni){
-    int rc;
-    char *err_msg = 0;
-    sqlite3_stmt *res;
-    char * nombre;
-    nombre = (char *) malloc (15* sizeof(char));
-
-    char * sql = "SELECT *FROM ADMINISTRADOR WHERE " dni = ?"";
-
-    rc = sqlite3_prepare_v2(db, sql, -1, &res,0);
-
-    if(rc == SQLITE_OK){
-        sqlite3_bind_text(res, 1, dni, sizeof(*dni), SQLITE_STATIC);
+// Función para validar si el usuario es un administrador y si la contraseña es correcta
+int validarAdministrador(char dni[], char contrasena[]) {
+    // Preparar la consulta SQL
+    char sql[200];
+    snprintf(sql, sizeof(sql), "SELECT * FROM administrador WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
+    
+    // Ejecutar la consulta y comprobar el resultado
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+    
+    if (rc != SQLITE_OK) {
+        printf("Error al ejecutar la consulta: %s\n", sqlite3_errmsg(db));
+        return 0;
     }
-    else{
-        fprintf(stderr,"Failed to execute statement: %s\n", sqlite3_errmsg(db));
+    
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW) {
+        // El usuario existe y la contraseña es correcta
+        return 1;
+    } else {
+        // El usuario no existe o la contraseña es incorrecta
+        return 0;
     }
-
-    int step = sqlite3_step(res);
-
-    if(step == SQLITE_ROW){
-        strcpy(nombre, (const char *) sqlite3_column_text(res,0));
-    }
-
-    else{
-        printf("No results foudn")
-    }
-    return nombre;
 }
