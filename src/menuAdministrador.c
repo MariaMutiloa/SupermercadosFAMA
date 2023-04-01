@@ -31,7 +31,8 @@ void admin_menu() {
                 break;
             case 3:
                 // añadir productos mediante compras a los proveedores
-                printf("Añadir productos por compras a proveedores\n");
+                printf("Hacer compra a proveedores\n");
+                realizarPedido();
                 break;
             case 4:
                 // visualizar compras realizadas por todos los clientes
