@@ -2,7 +2,7 @@
 #ifndef STRUCT_H
 
 typedef struct {
-char dni [8];
+char dni [9];
 char correo [50];
 char num_tarjeta [8];
 char direccion[80];
@@ -13,7 +13,7 @@ char apellido[15];
 }Cliente;
 
 typedef struct {
-char dni [8];
+char dni [9];
 char correo [50];
 char contrasena[20];
 char nombre[15];

@@ -23,11 +23,11 @@ int main(){
     if (validarCliente(dni, contrasena)) {
         printf("Bienvenido, cliente!\n");
         // Mostrar menú de cliente
-        // ...
+       
     } else if (validarAdministrador(dni, contrasena)) {
         printf("Bienvenido, administrador!\n");
         // Mostrar menú de administrador
-        // ...
+    
     } else {
         printf("Usuario o contraseña incorrectos.\n");
     }
