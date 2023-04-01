@@ -8,5 +8,6 @@ int validarAdministrador(char dni[], char contrasena[]);
 void agregarCliente();
 void eliminarCliente();
 void imprimirCompras();
+void realizarPedido();
 
 #endif

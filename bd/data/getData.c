@@ -253,51 +253,108 @@ void imprimirCompras() {
     sqlite3_close(db);
 }
 
-struct Producto {
-    char nombre[50];
-    float precio;
-    int cantidad;
-};
+void realizarPedido(){
+    startConn();
+    char respuesta;
+    char dni[20];
+    int cod_ped, importe, pagado, cantidad_total = 0;
+    int cod_prod, cantidad;
+    char descripcion[100], nom_prov[100];
+    sqlite3_stmt *stmt;
 
-
-void anyadirProductos(){
-      struct Producto productos[10]; // Array de productos con tamaño 10
-    int num_productos;
-
-    printf("Ingrese el numero de productos a ingresar (maximo 10): ");
-    scanf("%d", &num_productos);
-
-    // Validación del número de productos ingresados
-    if (num_productos < 1 || num_productos > 10) {
-        printf("Numero de productos inválido. Debe ingresar un valor entre 1 y 10.\n");
-        return 1;
+    printf("Lista de productos del proveedor:\n");
+    printf("--------------------------------\n");
+    // Muestra los productos del proveedor
+    if(sqlite3_prepare_v2(db, "SELECT cod_prod, descripcion, importe, cantidad FROM productos_proveedor", -1, &stmt, NULL) != SQLITE_OK){
+        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+        return;
     }
-
-    // Ciclo para ingresar los productos
-    for (int i = 0; i < num_productos; i++) {
-        printf("Ingrese el nombre del producto %d: ", i+1);
-        scanf("%s", productos[i].nombre);
-
-        printf("Ingrese el precio del producto %d: ", i+1);
-        scanf("%f", &productos[i].precio);
-
-        printf("Ingrese la cantidad del producto %d: ", i+1);
-        scanf("%d", &productos[i].cantidad);
+    while(sqlite3_step(stmt) != SQLITE_DONE){
+        printf("%d - %s: %d euros (%d disponibles)\n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2), sqlite3_column_int(stmt, 3));
     }
+    sqlite3_finalize(stmt);
 
-    // Mostrar los productos ingresados
-    printf("\nProductos ingresados:\n");
-    for (int i = 0; i < num_productos; i++) {
-        printf("Nombre: %s\n", productos[i].nombre);
-        printf("Precio: %.2f\n", productos[i].precio);
-        printf("Cantidad: %d\n\n", productos[i].cantidad);
-       
+    // Pedir al usuario que elija un producto y la cantidad
+    do{
+        printf("¿Qué producto quiere pedir? (introduzca el código): ");
+        scanf("%d", &cod_prod);
+        printf("¿Cuántas unidades quiere pedir? ");
+        scanf("%d", &cantidad);
+
+        // Actualiza la cantidad del producto en la tabla productos
+        if(sqlite3_prepare_v2(db, "UPDATE productos SET cantidad = cantidad + ? WHERE cod_prod = ?", -1, &stmt, NULL) != SQLITE_OK){
+            fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+            return;
+        }
+        sqlite3_bind_int(stmt, 1, cantidad);
+        sqlite3_bind_int(stmt, 2, cod_prod);
+        if(sqlite3_step(stmt) != SQLITE_DONE){
+            fprintf(stderr, "Error updating data: %s\n", sqlite3_errmsg(db));
+            return;
+        }
+        sqlite3_finalize(stmt);
+
+        cantidad_total += cantidad;
+
+        printf("¿Quiere pedir otro producto? (s/n) ");
+        scanf(" %c", &respuesta);
+    } while(respuesta == 's');
+
+    // Genera un código de pedido único para el administrador
+    if(sqlite3_prepare_v2(db, "SELECT MAX(cod_ped) FROM pedidoAdministrador", -1, &stmt, NULL) != SQLITE_OK){
+        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+        return;
     }
-    for (int i = 0; i < num_productos; i++) {
-         printf("%i. %s\n",i+1, productos[i].nombre);
-
+    if(sqlite3_step(stmt) == SQLITE_ROW){
+        cod_ped = sqlite3_column_int(stmt, 0) + 1;
+    } else {
+        cod_ped = 1;
     }
-    return 0;
+    sqlite3_finalize(stmt);
 
+    // Pedir el DNI del administrador
+    printf("Introduzca su DNI: ");
+    scanf("%s", dni);
+
+    // Inserta el pedido en la tabla pedidoAdministrador
+    if(sqlite3_prepare_v2(db, "INSERT INTO pedidoAdministrador (dni, cod_ped, importe, pagado) VALUES (?, ?, ?, 0)", -1, &stmt, NULL) != SQLITE_OK){
+        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 2, cod_ped);
+    importe = calcularImporte(cantidad_total, cod_prod);
+
+// Obtiene la descripción del producto y el nombre del proveedor
+if(sqlite3_prepare_v2(db, "SELECT descripcion, nom_prov FROM productos_proveedor WHERE cod_prod = ?", -1, &stmt, NULL) != SQLITE_OK){
+    fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+    return;
+}
+sqlite3_bind_int(stmt, 1, cod_prod);
+if(sqlite3_step(stmt) == SQLITE_ROW){
+    strcpy(descripcion, sqlite3_column_text(stmt, 0));
+    strcpy(nom_prov, sqlite3_column_text(stmt, 1));
+}
+sqlite3_finalize(stmt);
+
+// Inserta los detalles del pedido en la tabla detallesPedido
+if(sqlite3_prepare_v2(db, "INSERT INTO detallesPedido (cod_ped, cod_prod, descripcion, cantidad, importe, nom_prov) VALUES (?, ?, ?, ?, ?, ?)", -1, &stmt, NULL) != SQLITE_OK){
+    fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+    return;
+}
+sqlite3_bind_int(stmt, 1, cod_ped);
+sqlite3_bind_int(stmt, 2, cod_prod);
+sqlite3_bind_text(stmt, 3, descripcion, -1, SQLITE_TRANSIENT);
+sqlite3_bind_int(stmt, 4, cantidad_total);
+sqlite3_bind_int(stmt, 5, importe);
+sqlite3_bind_text(stmt, 6, nom_prov, -1, SQLITE_TRANSIENT);
+if(sqlite3_step(stmt) != SQLITE_DONE){
+    fprintf(stderr, "Error inserting data: %s\n", sqlite3_errmsg(db));
+    return;
+}
+sqlite3_finalize(stmt);
+
+printf("Pedido realizado con éxito\n");
+endConn();
 }
 
