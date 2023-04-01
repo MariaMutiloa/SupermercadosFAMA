@@ -253,3 +253,51 @@ void imprimirCompras() {
     sqlite3_close(db);
 }
 
+struct Producto {
+    char nombre[50];
+    float precio;
+    int cantidad;
+};
+
+
+void anyadirProductos(){
+      struct Producto productos[10]; // Array de productos con tamaño 10
+    int num_productos;
+
+    printf("Ingrese el numero de productos a ingresar (maximo 10): ");
+    scanf("%d", &num_productos);
+
+    // Validación del número de productos ingresados
+    if (num_productos < 1 || num_productos > 10) {
+        printf("Numero de productos inválido. Debe ingresar un valor entre 1 y 10.\n");
+        return 1;
+    }
+
+    // Ciclo para ingresar los productos
+    for (int i = 0; i < num_productos; i++) {
+        printf("Ingrese el nombre del producto %d: ", i+1);
+        scanf("%s", productos[i].nombre);
+
+        printf("Ingrese el precio del producto %d: ", i+1);
+        scanf("%f", &productos[i].precio);
+
+        printf("Ingrese la cantidad del producto %d: ", i+1);
+        scanf("%d", &productos[i].cantidad);
+    }
+
+    // Mostrar los productos ingresados
+    printf("\nProductos ingresados:\n");
+    for (int i = 0; i < num_productos; i++) {
+        printf("Nombre: %s\n", productos[i].nombre);
+        printf("Precio: %.2f\n", productos[i].precio);
+        printf("Cantidad: %d\n\n", productos[i].cantidad);
+       
+    }
+    for (int i = 0; i < num_productos; i++) {
+         printf("%i. %s\n",i+1, productos[i].nombre);
+
+    }
+    return 0;
+
+}
+
