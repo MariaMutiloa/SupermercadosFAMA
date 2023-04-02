@@ -384,3 +384,135 @@ sqlite3_close(db);
 printf("Pedido realizado con éxito\n");
 }
 
+void actualizarDatosCliente() {
+    char dni[10];
+    char contrasena[50];
+    char opcion[10];
+    char sql[200];
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    int rc;
+
+    // Ingresar el DNI del cliente
+    printf("Ingrese su DNI: ");
+    fgets(dni, 10, stdin);
+    dni[strcspn(dni, "\r\n")] = 0;
+
+    // Ingresar la contraseña del cliente
+    printf("Ingrese su contraseña: ");
+    fgets(contrasena, 50, stdin);
+    contrasena[strcspn(contrasena, "\r\n")] = 0;
+
+    // Realizar la conexión con la base de datos
+    startConn();
+
+    // Verifica el DNI y la contraseña del cliente
+    snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK) {
+        printf("Error al verificar el DNI y la contraseña del cliente: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_ROW) {
+        printf("DNI o contraseña incorrectos. Por favor, inténtelo nuevamente.\n");
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+
+    // Bucle para preguntar al usuario qué datos quiere cambiar
+    while (1) {
+        // Mostrar opciones al usuario
+        printf("\n¿Qué dato desea actualizar?\n");
+        printf("1. Contraseña\n");
+        printf("2. Dirección de casa\n");
+        printf("3. Correo electrónico\n");
+        printf("4. Salir\n");
+        printf("Ingrese el número de la opción que desee: ");
+
+        // Lee la opción del usuario
+        fgets(opcion, 10, stdin);
+        opcion[strcspn(opcion, "\r\n")] = 0;
+
+        // opción del usuario
+        if (strcmp(opcion, "1") == 0) {
+            // Pedir la nueva contraseña al usuario
+            char nuevaContrasena[50];
+            char confirmacion[50];
+
+            printf("\nIngrese su nueva contraseña: ");
+            fgets(nuevaContrasena, 50, stdin);
+            nuevaContrasena[strcspn(nuevaContrasena, "\r\n")] = 0;
+
+            // Pide la confirmación de la nueva contraseña al usuario
+            printf("Confirme su nueva contraseña: ");
+            fgets(confirmacion, 50, stdin);
+            confirmacion[strcspn(confirmacion, "\r\n")] = 0;
+
+            // Verifica que las contraseñas coincidan
+            if (strcmp(nuevaContrasena, confirmacion) != 0) {
+                printf("Las contraseñas no coinciden. Por favor, inténtelo nuevamente.\n");
+            } else {
+            // Actualiza la contraseña del cliente en la base de datos
+            snprintf(sql, sizeof(sql), "UPDATE cliente SET contrasena='%s' WHERE dni='%s'", nuevaContrasena, dni);
+            rc = sqlite3_exec(db, sql, 0, 0, 0);
+                        if (rc != SQLITE_OK) {
+                printf("Error al actualizar la contraseña: %s\n", sqlite3_errmsg(db));
+            } else {
+                printf("Contraseña actualizada exitosamente.\n");
+            }
+        }
+    } else if (strcmp(opcion, "2") == 0) {
+        // Pedir la nueva dirección de casa al usuario
+        char nuevaDireccion[200];
+
+        printf("\nIngrese su nueva dirección de casa: ");
+        fgets(nuevaDireccion, 200, stdin);
+        nuevaDireccion[strcspn(nuevaDireccion, "\r\n")] = 0;
+
+        // Actualizar la dirección de casa del cliente en la base de datos
+        snprintf(sql, sizeof(sql), "UPDATE cliente SET direccion='%s' WHERE dni='%s'", nuevaDireccion, dni);
+        rc = sqlite3_exec(db, sql, 0, 0, 0);
+
+        if (rc != SQLITE_OK) {
+            printf("Error al actualizar la dirección de casa: %s\n", sqlite3_errmsg(db));
+        } else {
+            printf("Dirección de casa actualizada exitosamente.\n");
+        }
+    } else if (strcmp(opcion, "3") == 0) {
+        // Pedir el nuevo correo electrónico al usuario
+        char nuevoCorreo[50];
+
+        printf("\nIngrese su nuevo correo electrónico: ");
+        fgets(nuevoCorreo, 50, stdin);
+        nuevoCorreo[strcspn(nuevoCorreo, "\r\n")] = 0;
+
+        // Actualizar el correo electrónico del cliente en la base de datos
+        snprintf(sql, sizeof(sql), "UPDATE cliente SET correo='%s' WHERE dni='%s'", nuevoCorreo, dni);
+        rc = sqlite3_exec(db, sql, 0, 0, 0);
+
+        if (rc != SQLITE_OK) {
+            printf("Error al actualizar el correo electrónico: %s\n", sqlite3_errmsg(db));
+        } else {
+            printf("Correo electrónico actualizado exitosamente.\n");
+        }
+    } else if (strcmp(opcion, "4") == 0) {
+        // Salir del bucle y de la función
+        break;
+    } else {
+        // Opción inválida, mostrar mensaje de error
+        printf("Opción inválida. Por favor, seleccione una opción válida.\n");
+    }
+}
+
+// Cerrar la conexión con la base de datos
+sqlite3_finalize(stmt);
+sqlite3_close(db);
+}
+
