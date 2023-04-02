@@ -8,7 +8,7 @@
 
 sqlite3 *db;
 
-// Función para validar si el usuario es un cliente y si la contraseña es correcta
+// Función para ver si el usuario es un cliente y si la contraseña es correcta
 int validarCliente(char dni[], char contrasena[]) {
     // Preparar la consulta SQL
     char sql[200];
@@ -33,13 +33,13 @@ int validarCliente(char dni[], char contrasena[]) {
     }
 }
 
-// Función para validar si el usuario es un administrador y si la contraseña es correcta
+// Función para ver si el usuario es un administrador y si la contraseña es correcta
 int validarAdministrador(char dni[], char contrasena[]) {
-    // Preparar la consulta SQL
+    // Prepara la consulta SQL
     char sql[200];
     snprintf(sql, sizeof(sql), "SELECT * FROM administrador WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
     
-    // Ejecutar la consulta y comprobar el resultado
+    // Ejecuta la consulta y comprobar el resultado
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
     
@@ -107,7 +107,7 @@ void agregarCliente() {
         return;
     }
 
-    // Asignar los valores de la estructura a los parametros de la consulta
+    // Asigna los valores de la estructura a los parametros de la consulta
     sqlite3_bind_text(stmt, 1, cliente.dni, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, cliente.nombre, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, cliente.apellido, -1, SQLITE_STATIC);
@@ -165,12 +165,12 @@ void eliminarCliente() {
         return;
     }
 
-    // Pedimos el DNI del cliente
+    // Pide el DNI del cliente
     printf("Introduce el DNI del cliente que quiere eliminar: ");
     fgets(dni, 10, stdin);
     sscanf(dni, "%s", dni);
 
-    // Creamos la consulta SQL para buscar al cliente
+    // Crea la consulta SQL para buscar al cliente
     sprintf(query, "SELECT * FROM cliente WHERE dni = '%s'", dni);
 
     // Compila la consulta SQL
@@ -393,7 +393,7 @@ void actualizarDatosCliente() {
     sqlite3_stmt *stmt;
     int rc;
     
-    // Realizar la conexión con la base de datos
+    // Realiza la conexión con la base de datos
     rc = sqlite3_open("./fama.db", &db);
     if (rc != SQLITE_OK) {
         printf("Error al conectar con la base de datos: %s\n", sqlite3_errmsg(db));
@@ -401,15 +401,14 @@ void actualizarDatosCliente() {
         return;
     }
     
-   // Ingresar el DNI del cliente
+   // Ingresa el DNI del cliente
 printf("Ingrese su DNI: ");
 fgets(dni, 10, stdin);
 dni[strcspn(dni, "\r\n")] = 0;
 
 getchar();
 
-    
-    // Verificar si el DNI del cliente existe en la base de datos
+    // Verifica si el DNI del cliente existe en la base de datos
     snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s'", dni);
     rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
@@ -427,13 +426,12 @@ getchar();
         return;
     }
     
-    // Ingresar la contraseña del cliente
-    // Ingresar la contraseña del cliente
+    // Ingresa la contraseña del cliente
 printf("Ingrese su contraseña: ");
 fgets(contrasena, 50, stdin);
 contrasena[strcspn(contrasena, "\r\n")] = 0;
     
-    // Verificar la contraseña del cliente
+    // Verifica la contraseña del cliente
     snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
     rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
@@ -494,14 +492,14 @@ contrasena[strcspn(contrasena, "\r\n")] = 0;
             }
         }
     } else if (strcmp(opcion, "2") == 0) {
-        // Pedir la nueva dirección de casa al usuario
+        // Pide la nueva dirección de casa al usuario
         char nuevaDireccion[200];
 
         printf("\nIngrese su nueva dirección de casa: ");
         fgets(nuevaDireccion, 200, stdin);
         nuevaDireccion[strcspn(nuevaDireccion, "\r\n")] = 0;
 
-        // Actualizar la dirección de casa del cliente en la base de datos
+        // Actualiza la dirección de casa del cliente 
         snprintf(sql, sizeof(sql), "UPDATE cliente SET direccion='%s' WHERE dni='%s'", nuevaDireccion, dni);
         rc = sqlite3_exec(db, sql, 0, 0, 0);
 
@@ -511,14 +509,14 @@ contrasena[strcspn(contrasena, "\r\n")] = 0;
             printf("Dirección de casa actualizada exitosamente.\n");
         }
     } else if (strcmp(opcion, "3") == 0) {
-        // Pedir el nuevo correo electrónico al usuario
+        // Pide el nuevo correo electrónico al usuario
         char nuevoCorreo[50];
 
         printf("\nIngrese su nuevo correo electrónico: ");
         fgets(nuevoCorreo, 50, stdin);
         nuevoCorreo[strcspn(nuevoCorreo, "\r\n")] = 0;
 
-        // Actualizar el correo electrónico del cliente en la base de datos
+        // Actualiza el correo electrónico del cliente 
         snprintf(sql, sizeof(sql), "UPDATE cliente SET correo='%s' WHERE dni='%s'", nuevoCorreo, dni);
         rc = sqlite3_exec(db, sql, 0, 0, 0);
 
@@ -531,7 +529,6 @@ contrasena[strcspn(contrasena, "\r\n")] = 0;
         // Salir del bucle y de la función
         break;
     } else {
-        // Opción inválida, mostrar mensaje de error
         printf("Opción inválida. Por favor, seleccione una opción válida.\n");
     }
 }
