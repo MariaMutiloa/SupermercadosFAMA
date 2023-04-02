@@ -132,6 +132,25 @@ void agregarCliente() {
 
     printf("Cliente agregado exitosamente a la base de datos\n");
 }
+int calcularImporte(int cantidad, int cod_prod) {
+    int importe;
+    sqlite3_stmt *stmt;
+
+    // Obtiene el precio del producto de la tabla productos_proveedor
+    if(sqlite3_prepare_v2(db, "SELECT importe FROM productos_proveedor WHERE cod_prod = ?", -1, &stmt, NULL) != SQLITE_OK){
+        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+    sqlite3_bind_int(stmt, 1, cod_prod);
+    if(sqlite3_step(stmt) == SQLITE_ROW){
+        importe = cantidad * sqlite3_column_int(stmt, 0);
+    } else {
+        importe = 0;
+    }
+    sqlite3_finalize(stmt);
+
+    return importe;
+}
 
 void eliminarCliente() {
     sqlite3* db;
@@ -265,12 +284,12 @@ void realizarPedido(){
     printf("Lista de productos del proveedor:\n");
     printf("--------------------------------\n");
     // Muestra los productos del proveedor
-    if(sqlite3_prepare_v2(db, "SELECT cod_prod, descripcion, importe, cantidad FROM productos_proveedor", -1, &stmt, NULL) != SQLITE_OK){
+    if(sqlite3_prepare_v2(db, "SELECT cod_prod, descripcion, importe FROM productos_proveedor", -1, &stmt, NULL) != SQLITE_OK){
         fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
         return;
     }
     while(sqlite3_step(stmt) != SQLITE_DONE){
-        printf("%d - %s: %d euros (%d disponibles)\n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2), sqlite3_column_int(stmt, 3));
+        printf("%d - %s: %d euros\n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2));
     }
     sqlite3_finalize(stmt);
 
@@ -321,9 +340,19 @@ void realizarPedido(){
         fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
         return;
     }
+    importe = calcularImporte(cantidad, cod_prod);
+
+// Inserta el pedido en la tabla pedidoAdministrador
+    pagado = (respuesta == 's') ? 1 : 0; // Si respuesta es 's', pagado es 1, sino es 0
+    if(sqlite3_prepare_v2(db, "INSERT INTO pedidoAdministrador (dni, cod_ped, importe, pagado) VALUES (?, ?, ?, ?)", -1, &stmt, NULL) != SQLITE_OK){
+        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+        return;
+    }
     sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(stmt, 2, cod_ped);
-    importe = calcularImporte(cantidad_total, cod_prod);
+    sqlite3_bind_double(stmt, 3, importe);
+    sqlite3_bind_int(stmt, 4, pagado);
+
 
 // Obtiene la descripción del producto y el nombre del proveedor
 if(sqlite3_prepare_v2(db, "SELECT descripcion, nom_prov FROM productos_proveedor WHERE cod_prod = ?", -1, &stmt, NULL) != SQLITE_OK){

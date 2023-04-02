@@ -5,6 +5,7 @@
 #include "menuCliente.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 sqlite3 *db;
@@ -15,7 +16,7 @@ int main(){
     // Insertar 20 productos básicos en la tabla "productos"
     char *productos[20][3] = {
         {"1.5", "1", "Leche"},
-        {"2", "2", "Pan"},
+        {"2", "21", "Pan"},
         {"2.5", "3", "Huevos"},
         {"1.7", "4", "Arroz"},
         {"3.4", "5", "Berenjena"},
@@ -25,7 +26,7 @@ int main(){
         {"2.3", "9", "Cebolla"},
         {"3.5", "10", "Tomate"},
         {"5.6", "11", "Patata"},
-        {"1.25", "12", "Zanahoria"},
+        {"1.25","12", "Zanahoria"},
         {"2", "13", "Lechuga"},
         {"3", "14", "Pimiento"},
         {"1", "15", "Ajo"},
