@@ -11,6 +11,7 @@
 sqlite3 *db;
 
 int main(){
+
     startConn();
     
     char dni[20], contrasena[20];
@@ -27,11 +28,11 @@ int main(){
     
     if (validarCliente(dni, contrasena)) {
         printf("Bienvenido, cliente!\n");
-        cliente_menu();
+
        
     } else if (validarAdministrador(dni, contrasena)) {
         printf("Bienvenido, administrador!\n");
-        admin_menu;
+        admin_menu();
     
     } else {
         printf("Usuario o contraseña incorrectos.\n");

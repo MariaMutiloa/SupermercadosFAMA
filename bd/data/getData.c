@@ -65,9 +65,11 @@ void agregarCliente() {
 
     printf("Ingrese los siguientes datos del cliente:\n");
 
-    printf("DNI: ");
+    printf("DNI letra incluida: ");
     fgets(cliente.dni, sizeof(cliente.dni), stdin);
     sscanf(cliente.dni, "%s", cliente.dni);
+
+    getchar();
 
     printf("Nombre: ");
     fgets(cliente.nombre, sizeof(cliente.nombre), stdin);
@@ -77,7 +79,7 @@ void agregarCliente() {
     fgets(cliente.apellido, sizeof(cliente.apellido), stdin);
     sscanf(cliente.apellido, "%s", cliente.apellido);
 
-    printf("Direccion: ");
+    printf("Direccion sin espacios: ");
     fgets(cliente.direccion, sizeof(cliente.direccion), stdin);
     sscanf(cliente.direccion, "%s", cliente.direccion);
 
@@ -93,10 +95,6 @@ void agregarCliente() {
     fgets(cliente.contrasena, sizeof(cliente.contrasena), stdin);
     sscanf(cliente.contrasena, "%s", cliente.contrasena);
 
-    if (!startConn()) {
-        fprintf(stderr, "Error al conectar con la base de datos\n");
-        return;
-    }
 
     char *query = "INSERT INTO cliente (dni, Nombre, Apellido, Direccion_Domicilio, Correo_electronico, Tarjeta, Contrasena) VALUES (?, ?, ?, ?, ?, ?, ?)";
     sqlite3_stmt *stmt;
@@ -121,7 +119,7 @@ void agregarCliente() {
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        fprintf(stderr, "Error en la ejecucion de la consulta: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "Error en la ejecucion de la consulta: %s (%d)\n", sqlite3_errmsg(db), sqlite3_extended_errcode(db));
         sqlite3_finalize(stmt);
         sqlite3_close(db);
         return;
@@ -177,7 +175,6 @@ void eliminarCliente() {
 
     // Compila la consulta SQL
     result = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
-
     // Verifica si se pudo compilar la consulta SQL
     if (result != SQLITE_OK) {
         fprintf(stderr, "Error preparando la consulta: %s\n", sqlite3_errmsg(db));
@@ -232,7 +229,7 @@ void imprimirCompras() {
     }
 
     char *query = "SELECT c.Nombre, c.Apellido, p.Cod_ped, p.Importe, GROUP_CONCAT(pr.cod_prod || ' - ' || pr.descripcion, '; ') as Productos \
-                   FROM cliente c, pedidoCliente p, pedidoCliente_productos pp, productos pr \
+                   FROM cliente c, pedidoCliente p, prdidoCliente_productos pp, productos pr \
                    WHERE c.dni = p.dni AND p.Cod_ped = pp.cod_ped AND pp.cod_prod = pr.cod_prod \
                    GROUP BY c.Nombre, c.Apellido, p.Cod_ped";
 
@@ -289,7 +286,7 @@ void realizarPedido(){
         return;
     }
     while(sqlite3_step(stmt) != SQLITE_DONE){
-        printf("%d - %s: %d euros\n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2));
+        printf("%d - %s: %d euros \n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2), sqlite3_column_int(stmt, 3));
     }
     sqlite3_finalize(stmt);
 
@@ -319,7 +316,7 @@ void realizarPedido(){
         scanf(" %c", &respuesta);
     } while(respuesta == 's');
 
-    // Genera un código de pedido único para el administrador
+    // Genera un código de pedido único
     if(sqlite3_prepare_v2(db, "SELECT MAX(cod_ped) FROM pedidoAdministrador", -1, &stmt, NULL) != SQLITE_OK){
         fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
         return;
@@ -382,8 +379,8 @@ if(sqlite3_step(stmt) != SQLITE_DONE){
     return;
 }
 sqlite3_finalize(stmt);
+sqlite3_close(db);
 
 printf("Pedido realizado con éxito\n");
-endConn();
 }
 
