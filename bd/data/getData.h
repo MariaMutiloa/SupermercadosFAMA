@@ -10,5 +10,6 @@ void eliminarCliente();
 void imprimirCompras();
 int calcularImporte(int cantidad, int cod_prod) ;
 void realizarPedido();
+void actualizarDatosCliente();
 
 #endif
