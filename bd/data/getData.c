@@ -392,35 +392,60 @@ void actualizarDatosCliente() {
     sqlite3 *db;
     sqlite3_stmt *stmt;
     int rc;
-
-    // Ingresar el DNI del cliente
-    printf("Ingrese su DNI: ");
-    fgets(dni, 10, stdin);
-    dni[strcspn(dni, "\r\n")] = 0;
-
-    // Ingresar la contraseña del cliente
-    printf("Ingrese su contraseña: ");
-    fgets(contrasena, 50, stdin);
-    contrasena[strcspn(contrasena, "\r\n")] = 0;
-
+    
     // Realizar la conexión con la base de datos
-    startConn();
-
-    // Verifica el DNI y la contraseña del cliente
-    snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
-    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
-
+    rc = sqlite3_open("./fama.db", &db);
     if (rc != SQLITE_OK) {
-        printf("Error al verificar el DNI y la contraseña del cliente: %s\n", sqlite3_errmsg(db));
+        printf("Error al conectar con la base de datos: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    
+   // Ingresar el DNI del cliente
+printf("Ingrese su DNI: ");
+fgets(dni, 10, stdin);
+dni[strcspn(dni, "\r\n")] = 0;
+
+getchar();
+
+    
+    // Verificar si el DNI del cliente existe en la base de datos
+    snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s'", dni);
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+    if (rc != SQLITE_OK) {
+        printf("Error al verificar el DNI del cliente: %s\n", sqlite3_errmsg(db));
         sqlite3_finalize(stmt);
         sqlite3_close(db);
         return;
     }
-
+    
     rc = sqlite3_step(stmt);
-
     if (rc != SQLITE_ROW) {
-        printf("DNI o contraseña incorrectos. Por favor, inténtelo nuevamente.\n");
+        printf("El DNI ingresado no existe en la base de datos.\n");
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+    
+    // Ingresar la contraseña del cliente
+    // Ingresar la contraseña del cliente
+printf("Ingrese su contraseña: ");
+fgets(contrasena, 50, stdin);
+contrasena[strcspn(contrasena, "\r\n")] = 0;
+    
+    // Verificar la contraseña del cliente
+    snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+    if (rc != SQLITE_OK) {
+        printf("Error al verificar la contraseña del cliente: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+    
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_ROW) {
+        printf("Contraseña incorrecta. Por favor, inténtelo nuevamente.\n");
         sqlite3_finalize(stmt);
         sqlite3_close(db);
         return;
@@ -515,4 +540,3 @@ void actualizarDatosCliente() {
 sqlite3_finalize(stmt);
 sqlite3_close(db);
 }
-
