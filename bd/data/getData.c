@@ -1,10 +1,10 @@
-#include "../bd/sqlite3.h"
-#include "conexion.h"
+#include "../sqlite3.h"
+#include "../conexion/conexion.h"
 #include <stdio.h>
 #include "getData.h"
 #include <string.h>
 #include <stdlib.h>
-#include "../src/struct.h" 
+#include "../../src/struct.h" 
 
 sqlite3 *db;
 
@@ -151,7 +151,6 @@ int calcularImporte(int cantidad, int cod_prod) {
 }
 
 void eliminarCliente() {
-    sqlite3* db;
     char dni[10];
     char query[100];
     sqlite3_stmt* stmt;
@@ -269,7 +268,29 @@ void imprimirCompras() {
     sqlite3_close(db);
 }
 
-void realizarPedido(){
+void listaProductosProveedor(){
+    sqlite3_close(db);
+    startConn();
+    int cod_ped, importe, pagado;
+    int cod_prod;
+    char descripcion[100];
+    sqlite3_stmt *stmt;
+
+    printf("Lista de productos del proveedor:\n");
+    printf("--------------------------------\n");
+    // Muestra los productos del proveedor
+    if(sqlite3_prepare_v2(db, "SELECT cod_prod, descripcion, importe FROM productos_proveedor", strlen("SELECT cod_prod, descripcion, importe FROM productos_proveedor")+1, &stmt, NULL) != SQLITE_OK){
+        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    while(sqlite3_step(stmt) != SQLITE_DONE){
+        printf("%d - %s: %d euros \n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2), sqlite3_column_int(stmt, 3));
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
+
+    void realizarPedido(){
     startConn();
     char respuesta;
     char dni[20];
@@ -278,33 +299,24 @@ void realizarPedido(){
     char descripcion[100], nom_prov[100];
     sqlite3_stmt *stmt;
 
-    printf("Lista de productos del proveedor:\n");
-    printf("--------------------------------\n");
-    // Muestra los productos del proveedor
-    if(sqlite3_prepare_v2(db, "SELECT cod_prod, descripcion, importe FROM productos_proveedor", -1, &stmt, NULL) != SQLITE_OK){
-        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
-        return;
-    }
-    while(sqlite3_step(stmt) != SQLITE_DONE){
-        printf("%d - %s: %d euros \n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2), sqlite3_column_int(stmt, 3));
-    }
-    sqlite3_finalize(stmt);
-
     // Pedir al usuario que elija un producto y la cantidad
     do{
         printf("¿Qué producto quiere pedir? (introduzca el código): ");
         scanf("%d", &cod_prod);
+        fflush(stdin);
         printf("¿Cuántas unidades quiere pedir? ");
         scanf("%d", &cantidad);
-
+        fflush(stdin);
         // Actualiza la cantidad del producto en la tabla productos
-        if(sqlite3_prepare_v2(db, "UPDATE productos SET cantidad = cantidad + ? WHERE cod_prod = ?", -1, &stmt, NULL) != SQLITE_OK){
+        if(sqlite3_prepare_v2(db, "UPDATE productos SET cantidad = cantidad + ? WHERE cod_prod = ?",strlen("UPDATE productos SET cantidad = cantidad + ? WHERE cod_prod = ?")+1, &stmt, NULL) != SQLITE_OK){
             fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
             return;
         }
         sqlite3_bind_int(stmt, 1, cantidad);
         sqlite3_bind_int(stmt, 2, cod_prod);
+
         if(sqlite3_step(stmt) != SQLITE_DONE){
+            printf("Error en linea 309\n");
             fprintf(stderr, "Error updating data: %s\n", sqlite3_errmsg(db));
             return;
         }
@@ -332,11 +344,6 @@ void realizarPedido(){
     printf("Introduzca su DNI: ");
     scanf("%s", dni);
 
-    // Inserta el pedido en la tabla pedidoAdministrador
-    if(sqlite3_prepare_v2(db, "INSERT INTO pedidoAdministrador (dni, cod_ped, importe, pagado) VALUES (?, ?, ?, 0)", -1, &stmt, NULL) != SQLITE_OK){
-        fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
-        return;
-    }
     importe = calcularImporte(cantidad, cod_prod);
 
 // Inserta el pedido en la tabla pedidoAdministrador
