@@ -352,6 +352,7 @@ fflush(stdin);
 
 // Genera un registro de pedido único
 switch(sqlite3_prepare_v2(db, "INSERT INTO pedidoAdministrador(cod_ped, dni,importe, pagado) VALUES(?, ?, ?, 0)", strlen("INSERT INTO pedidoAdministrador(cod_ped, dni, importe, pagado) VALUES(?, ?, ?, 0)")+1, &stmt, NULL)){
+    //al principio siempre pagado será 0 ya que se paga a 3 meses.
     case SQLITE_OK:
         sqlite3_bind_int(stmt, 1, cod_ped);
         sqlite3_bind_text(stmt, 2, dni, strlen(dni), SQLITE_TRANSIENT);
