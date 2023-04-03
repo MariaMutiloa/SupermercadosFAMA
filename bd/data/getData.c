@@ -8,8 +8,11 @@
 
 sqlite3 *db;
 
-// Función para ver si el usuario es un cliente y si la contraseña es correcta
+// Función para validar si el usuario es un cliente y si la contraseña es correcta
 int validarCliente(char dni[], char contrasena[]) {
+    usleep(10000);
+    db = startConn();
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
     // Preparar la consulta SQL
     char sql[200];
     snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
@@ -31,15 +34,20 @@ int validarCliente(char dni[], char contrasena[]) {
         // El usuario no existe o la contraseña es incorrecta
         return 0;
     }
+    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+    closeConn(db);
 }
 
-// Función para ver si el usuario es un administrador y si la contraseña es correcta
+// Función para validar si el usuario es un administrador y si la contraseña es correcta
 int validarAdministrador(char dni[], char contrasena[]) {
-    // Prepara la consulta SQL
+    usleep(10000);
+    db=startConn();
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+    // Preparar la consulta SQL
     char sql[200];
     snprintf(sql, sizeof(sql), "SELECT * FROM administrador WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
     
-    // Ejecuta la consulta y comprobar el resultado
+    // Ejecutar la consulta y comprobar el resultado
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
     
@@ -56,13 +64,17 @@ int validarAdministrador(char dni[], char contrasena[]) {
         // El usuario no existe o la contraseña es incorrecta
         return 0;
     }
+    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+    closeConn(db);
 }
 
 
 void agregarCliente() {
     
     Cliente cliente;
-
+      usleep(10000);
+    db = startConn();
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
     printf("Ingrese los siguientes datos del cliente:\n");
 
     printf("DNI letra incluida: ");
@@ -103,11 +115,11 @@ void agregarCliente() {
 
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Error en la preparacion del statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close_v2(db);
+        sqlite3_close(db);
         return;
     }
 
-    // Asigna los valores de la estructura a los parametros de la consulta
+    // Asignar los valores de la estructura a los parametros de la consulta
     sqlite3_bind_text(stmt, 1, cliente.dni, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, cliente.nombre, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, cliente.apellido, -1, SQLITE_STATIC);
@@ -121,12 +133,13 @@ void agregarCliente() {
     if (rc != SQLITE_DONE) {
         fprintf(stderr, "Error en la ejecucion de la consulta: %s (%d)\n", sqlite3_errmsg(db), sqlite3_extended_errcode(db));
         sqlite3_finalize(stmt);
-        sqlite3_close_v2(db);
+        sqlite3_close(db);
         return;
     }
 
     sqlite3_finalize(stmt);
-    sqlite3_close_v2(db);
+    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+    closeConn(db);
 
     printf("Cliente agregado exitosamente a la base de datos\n");
 }
@@ -135,7 +148,7 @@ int calcularImporte(int cantidad, int cod_prod) {
     sqlite3_stmt *stmt;
 
     // Obtiene el precio del producto de la tabla productos_proveedor
-    if(sqlite3_prepare_v2(db, "SELECT importe FROM productos_proveedor WHERE cod_prod = ?", -1, &stmt, NULL) != SQLITE_OK){
+    if(sqlite3_prepare_v2(db, "SELECT importe FROM productos_proveedor WHERE cod_prod = ?", strlen("SELECT importe FROM productos_proveedor WHERE cod_prod = ?")+1, &stmt, NULL) != SQLITE_OK){
         fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
         return 0;
     }
@@ -146,66 +159,54 @@ int calcularImporte(int cantidad, int cod_prod) {
         importe = 0;
     }
     sqlite3_finalize(stmt);
+    printf("Importe calculado\n");
 
     return importe;
 }
 
 void eliminarCliente() {
-    char dni[10];
-    char query[100];
-    sqlite3_stmt* stmt;
-    int result;
-
-    // Conexion a la base de datos
-    result = startConn(&db);
-
-    if (!result) {
+    usleep(10000);
+    db = startConn();
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+    if (db == NULL) {
         fprintf(stderr, "Error conectando a la base de datos\n");
         return;
     }
 
-    // Pide el DNI del cliente
+    char dni[20];
     printf("Introduce el DNI del cliente que quiere eliminar: ");
-    fgets(dni, 10, stdin);
-    sscanf(dni, "%s", dni);
+    fgets(dni, sizeof(dni), stdin);
+    dni[strcspn(dni, "\n")] = '\0';
 
-    // Crea la consulta SQL para buscar al cliente
-    sprintf(query, "SELECT * FROM cliente WHERE dni = '%s'", dni);
-
-    // Compila la consulta SQL
-    result = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
-    // Verifica si se pudo compilar la consulta SQL
-    if (result != SQLITE_OK) {
+    char* sql = "SELECT * FROM cliente WHERE dni = ?";
+    sqlite3_stmt* stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
         fprintf(stderr, "Error preparando la consulta: %s\n", sqlite3_errmsg(db));
-        sqlite3_close_v2(db);
+        sqlite3_close(db);
         return;
     }
 
-    // Ejecuta la consulta SQL
-    result = sqlite3_step(stmt);
+    sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_TRANSIENT);
 
-    // Verifica si se encontró al cliente
-    if (result == SQLITE_ROW) {
-        // Creamos la consulta SQL para eliminar al cliente
-        sprintf(query, "DELETE FROM cliente WHERE dni = '%s'", dni);
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW) {
+        sqlite3_finalize(stmt);
 
-        // Compila la consulta SQL
-        result = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
-
-        // Verifica si se pudo compilar la consulta SQL
-        if (result != SQLITE_OK) {
+        sql = "DELETE FROM cliente WHERE dni = ?";
+        rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+        if (rc != SQLITE_OK) {
             fprintf(stderr, "Error preparando la consulta: %s\n", sqlite3_errmsg(db));
-            sqlite3_close_v2(db);
+            sqlite3_close(db);
             return;
         }
 
-        // Ejecuta la consulta SQL
-        result = sqlite3_step(stmt);
+        sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_TRANSIENT);
 
-        // Verifica si se eliminó al cliente
-        if (result != SQLITE_DONE) {
+        rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
             fprintf(stderr, "Error eliminando al cliente: %s\n", sqlite3_errmsg(db));
-            sqlite3_close_v2(db);
+            sqlite3_close(db);
             return;
         }
 
@@ -214,18 +215,17 @@ void eliminarCliente() {
         printf("Cliente no encontrado\n");
     }
 
-    // Libera la memoria del statement
     sqlite3_finalize(stmt);
-
-    // Cierra la conexión a la base de datos
-    sqlite3_close_v2(db);
+    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+    closeConn(db);
 }
 
+
+
 void imprimirCompras() {
-    if (!startConn()) {
-        fprintf(stderr, "Error al conectar con la base de datos\n");
-        return;
-    }
+    usleep(10000); // pausa de 10 milisegundos
+    db=startConn();
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
 
     char *query = "SELECT c.Nombre, c.Apellido, p.Cod_ped, p.Importe, GROUP_CONCAT(pr.cod_prod || ' - ' || pr.descripcion, '; ') as Productos \
                    FROM cliente c, pedidoCliente p, prdidoCliente_productos pp, productos pr \
@@ -238,7 +238,7 @@ void imprimirCompras() {
 
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Error en la preparacion del statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close_v2(db);
+        sqlite3_close(db);
         return;
     }
 
@@ -260,15 +260,20 @@ void imprimirCompras() {
     if (rc != SQLITE_DONE) {
         fprintf(stderr, "Error en la ejecucion de la consulta: %s\n", sqlite3_errmsg(db));
         sqlite3_finalize(stmt);
-        sqlite3_close_v2(db);
+        sqlite3_close(db);
         return;
     }
 
     sqlite3_finalize(stmt);
-    sqlite3_close_v2(db);
+    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+    closeConn(db);
 }
 
 void realizarPedido(){
+    
+    usleep(10000); // pausa de 10 milisegundos
+    db=startConn();
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
     int cod_prod, cantidad, cantidad_total = 0, cod_ped, importes = 0;
     char dni[10], nom_prov[50], respuesta;
     sqlite3_stmt *stmt;
@@ -344,10 +349,6 @@ printf("Introduzca su DNI: ");
 scanf("%s", dni);
 fflush(stdin);
 
-// Pedir el nombre del proveedor
-printf("Introduzca el nombre del proveedor: ");
-scanf("%s", nom_prov);
-fflush(stdin);
 
 // Genera un registro de pedido único
 switch(sqlite3_prepare_v2(db, "INSERT INTO pedidoAdministrador(cod_ped, dni,importe, pagado) VALUES(?, ?, ?, 0)", strlen("INSERT INTO pedidoAdministrador(cod_ped, dni, importe, pagado) VALUES(?, ?, ?, 0)")+1, &stmt, NULL)){
@@ -390,86 +391,42 @@ switch(sqlite3_prepare_v2(db, "UPDATE productos SET cantidad = cantidad + ? WHER
         fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
         return;
 }
-
-sqlite3_close_v2(db);
+sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+closeConn(db);
 }
-
-int callback(void *data, int argc, char **argv, char **azColName) {
-    int i;
-    for(i = 0; i < argc; i++) {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    printf("\n");
-    return 0;
-}
-
 
 void actualizarDatosCliente() {
     char dni[10];
     char contrasena[50];
     char opcion[10];
     char sql[200];
-    sqlite3 *db;
     sqlite3_stmt *stmt;
     int rc;
-    
-    // Realiza la conexión con la base de datos
-    rc = sqlite3_open("./fama.db", &db);
-    if (rc != SQLITE_OK) {
-        printf("Error al conectar con la base de datos: %s\n", sqlite3_errmsg(db));
-        sqlite3_close_v2(db);
-        return;
-    }
-    
-   // Ingresa el DNI del cliente
-printf("Ingrese su DNI: ");
-fgets(dni, 10, stdin);
-dni[strcspn(dni, "\r\n")] = 0;
+    usleep(10000); // pausa de 10 milisegundos
+ 
+    db=startConn();
+    // Ingresar el DNI del cliente
+    printf("Ingrese su DNI: ");
+    fgets(dni, 10, stdin);
+    dni[strcspn(dni, "\r\n")] = 0;
+    getchar();
 
-getchar();
+    // Ingresar la contraseña del cliente
+    startConn();
+    printf("Ingrese su contraseña: ");
+    fgets(contrasena, 50, stdin);
+    contrasena[strcspn(contrasena, "\r\n")] = 0;
 
-    // Verifica si el DNI del cliente existe en la base de datos
-    snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s'", dni);
-    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+    // Inicia un bloque de control de transacciones
+    rc = sqlite3_exec(db, "BEGIN TRANSACTION", 0, 0, 0);
+
     if (rc != SQLITE_OK) {
-        printf("Error al verificar el DNI del cliente: %s\n", sqlite3_errmsg(db));
-        sqlite3_finalize(stmt);
-        sqlite3_close_v2(db);
-        return;
-    }
-    
-    rc = sqlite3_step(stmt);
-    if (rc != SQLITE_ROW) {
-        printf("El DNI ingresado no existe en la base de datos.\n");
-        sqlite3_finalize(stmt);
-        sqlite3_close_v2(db);
-        return;
-    }
-    
-    // Ingresa la contraseña del cliente
-printf("Ingrese su contraseña: ");
-fgets(contrasena, 50, stdin);
-contrasena[strcspn(contrasena, "\r\n")] = 0;
-    
-    // Verifica la contraseña del cliente
-    snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
-    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
-    if (rc != SQLITE_OK) {
-        printf("Error al verificar la contraseña del cliente: %s\n", sqlite3_errmsg(db));
-        sqlite3_finalize(stmt);
-        sqlite3_close_v2(db);
-        return;
-    }
-    
-    rc = sqlite3_step(stmt);
-    if (rc != SQLITE_ROW) {
-        printf("Contraseña incorrecta. Por favor, inténtelo nuevamente.\n");
-        sqlite3_finalize(stmt);
-        sqlite3_close_v2(db);
+        printf("Error al iniciar la transacción: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
         return;
     }
 
-    // Bucle para preguntar al usuario qué datos quiere cambiar
+    // Actualizar la información del cliente
     while (1) {
         // Mostrar opciones al usuario
         printf("\n¿Qué dato desea actualizar?\n");
@@ -483,7 +440,6 @@ contrasena[strcspn(contrasena, "\r\n")] = 0;
         fgets(opcion, 10, stdin);
         opcion[strcspn(opcion, "\r\n")] = 0;
 
-        // opción del usuario
         if (strcmp(opcion, "1") == 0) {
             // Pedir la nueva contraseña al usuario
             char nuevaContrasena[50];
@@ -492,7 +448,6 @@ contrasena[strcspn(contrasena, "\r\n")] = 0;
             printf("\nIngrese su nueva contraseña: ");
             fgets(nuevaContrasena, 50, stdin);
             nuevaContrasena[strcspn(nuevaContrasena, "\r\n")] = 0;
-
             // Pide la confirmación de la nueva contraseña al usuario
             printf("Confirme su nueva contraseña: ");
             fgets(confirmacion, 50, stdin);
@@ -502,203 +457,68 @@ contrasena[strcspn(contrasena, "\r\n")] = 0;
             if (strcmp(nuevaContrasena, confirmacion) != 0) {
                 printf("Las contraseñas no coinciden. Por favor, inténtelo nuevamente.\n");
             } else {
-            // Actualiza la contraseña del cliente en la base de datos
-            snprintf(sql, sizeof(sql), "UPDATE cliente SET contrasena='%s' WHERE dni='%s'", nuevaContrasena, dni);
-            rc = sqlite3_exec(db, sql, 0, 0, 0);
-                        if (rc != SQLITE_OK) {
-                printf("Error al actualizar la contraseña: %s\n", sqlite3_errmsg(db));
-            } else {
-                printf("Contraseña actualizada exitosamente.\n");
-            }
-        }
-    } else if (strcmp(opcion, "2") == 0) {
-        // Pide la nueva dirección de casa al usuario
-        char nuevaDireccion[200];
+                 
+  sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+                // Actualiza la contraseña del cliente en la base de datos
+                snprintf(sql, sizeof(sql), "UPDATE cliente SET contrasena='%s' WHERE dni='%s' AND contrasena='%s'", nuevaContrasena, dni, contrasena);
+                rc = sqlite3_exec(db, sql, 0, 0, 0);
 
-        printf("\nIngrese su nueva dirección de casa: ");
-        fgets(nuevaDireccion, 200, stdin);
+                if (rc != SQLITE_OK) {
+printf("Error al actualizar la contraseña del cliente: %s\n", sqlite3_errmsg(db));
+} else {
+printf("Contraseña actualizada exitosamente.\n");
+strcpy(contrasena, nuevaContrasena); // Actualiza la variable de la contraseña con la nueva contraseña
+}
+} }else if (strcmp(opcion, "2") == 0) {
+// Pedir la nueva dirección al usuario
+char nuevaDireccion[100];
+        printf("\nIngrese su nueva dirección: ");
+        fgets(nuevaDireccion, 100, stdin);
         nuevaDireccion[strcspn(nuevaDireccion, "\r\n")] = 0;
 
-        // Actualiza la dirección de casa del cliente 
-        snprintf(sql, sizeof(sql), "UPDATE cliente SET direccion='%s' WHERE dni='%s'", nuevaDireccion, dni);
+        // Actualiza la dirección del cliente en la base de datos
+        snprintf(sql, sizeof(sql), "UPDATE cliente SET direccion='%s' WHERE dni='%s' AND contrasena='%s'", nuevaDireccion, dni, contrasena);
         rc = sqlite3_exec(db, sql, 0, 0, 0);
 
         if (rc != SQLITE_OK) {
-            printf("Error al actualizar la dirección de casa: %s\n", sqlite3_errmsg(db));
+            printf("Error al actualizar la dirección del cliente: %s\n", sqlite3_errmsg(db));
         } else {
-            printf("Dirección de casa actualizada exitosamente.\n");
+            printf("Dirección actualizada exitosamente.\n");
         }
     } else if (strcmp(opcion, "3") == 0) {
-        // Pide el nuevo correo electrónico al usuario
+        // Pedir el nuevo correo electrónico al usuario
         char nuevoCorreo[50];
 
         printf("\nIngrese su nuevo correo electrónico: ");
         fgets(nuevoCorreo, 50, stdin);
         nuevoCorreo[strcspn(nuevoCorreo, "\r\n")] = 0;
 
-        // Actualiza el correo electrónico del cliente 
-        snprintf(sql, sizeof(sql), "UPDATE cliente SET correo='%s' WHERE dni='%s'", nuevoCorreo, dni);
+        // Actualiza el correo electrónico del cliente en la base de datos
+        snprintf(sql, sizeof(sql), "UPDATE cliente SET correo='%s' WHERE dni='%s' AND contrasena='%s'", nuevoCorreo, dni, contrasena);
         rc = sqlite3_exec(db, sql, 0, 0, 0);
 
         if (rc != SQLITE_OK) {
-            printf("Error al actualizar el correo electrónico: %s\n", sqlite3_errmsg(db));
+            printf("Error al actualizar el correo electrónico del cliente: %s\n", sqlite3_errmsg(db));
         } else {
             printf("Correo electrónico actualizado exitosamente.\n");
         }
     } else if (strcmp(opcion, "4") == 0) {
-        // Salir del bucle y de la función
+        // Sale del bucle
         break;
     } else {
-        printf("Opción inválida. Por favor, seleccione una opción válida.\n");
+        // Opción inválida
+        printf("Opción inválida. Por favor, inténtelo nuevamente.\n");
     }
 }
 
-// Cerrar la conexión con la base de datos
-sqlite3_finalize(stmt);
-sqlite3_close_v2(db);
+// Cierra el bloque de control de transacciones
+rc = sqlite3_exec(db, "END TRANSACTION", 0, 0, 0);
+
+if (rc != SQLITE_OK) {
+    printf("Error al cerrar la transacción: %s\n", sqlite3_errmsg(db));
 }
 
-void actualizarDatosCliente() {
-    char dni[10];
-    char contrasena[50];
-    char opcion[10];
-    char sql[200];
-    sqlite3 *db;
-    int rc;
-    
-    // Realiza la conexión con la base de datos
-    rc = sqlite3_open("./fama.db", &db);
-    if (rc != SQLITE_OK) {
-        printf("Error al conectar con la base de datos: %s\n", sqlite3_errmsg(db));
-        sqlite3_close_v2(db);
-        return;
-    }
-    
-    // Ingresa el DNI del cliente
-    printf("Ingrese su DNI: ");
-    fgets(dni, 10, stdin);
-    dni[strcspn(dni, "\r\n")] = 0;
-    getchar();
-
-    // Verifica si el DNI del cliente existe en la base de datos
-    snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s'", dni);
-    rc = sqlite3_exec(db, sql, callback, NULL, NULL);
-    if (rc != SQLITE_OK) {
-        printf("Error al verificar el DNI del cliente: %s\n", sqlite3_errmsg(db));
-        sqlite3_close_v2(db);
-        return;
-    }
-
-    // Ingresa la contraseña del cliente
-    printf("Ingrese su contraseña: ");
-    fgets(contrasena, 50, stdin);
-    contrasena[strcspn(contrasena, "\r\n")] = 0;
-    
-    // Verifica la contraseña del cliente
-    snprintf(sql, sizeof(sql), "SELECT * FROM cliente WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
-    rc = sqlite3_exec(db, sql, callback, NULL, NULL);
-    if (rc != SQLITE_OK) {
-        printf("Contraseña incorrecta. Por favor, inténtelo nuevamente.\n");
-        sqlite3_close_v2(db);
-        return;
-    }
-
-    // Mostrar opciones al usuario
-    printf("\n¿Qué dato desea actualizar?\n");
-    printf("1. Contraseña\n");
-    printf("2. Dirección de casa\n");
-    printf("3. Correo electrónico\n");
-    printf("4. Salir\n");
-    printf("Ingrese el número de la opción que desee: ");
-
-    // Lee la opción del usuario
-    fgets(opcion, 10, stdin);
-    opcion[strcspn(opcion, "\r\n")] = 0;
-
-    // Procesa la opción elegida por el usuario
-    switch (opcion[0]) {
-        case '1': {
-            // Pedir la nueva contraseña al usuario
-            char nuevaContrasena[50];
-            char confirmacion[50];
-
-            printf("\nIngrese su nueva contraseña: ");
-            fgets(nuevaContrasena, 50, stdin);
-            nuevaContrasena[strcspn(nuevaContrasena, "\r\n")] = 0;
-
-            // Pide la confirmación de la nueva contraseña al usuario
-            printf("Confirme su nueva contraseña: ");
-            fgets(confirmacion, 50, stdin);
-            confirmacion[strcspn(confirmacion, "\r\n")] = 0;
-
-             // Verifica que las contraseñas coincidan
-            if (strcmp(nuevaContrasena, confirmacion ) != 0) {
-printf("Las contraseñas no coinciden. Por favor, inténtelo nuevamente.\n");
-sqlite3_close_v2(db);
-return;
-}
-        // Actualiza la contraseña del cliente en la base de datos
-        snprintf(sql, sizeof(sql), "UPDATE cliente SET contrasena='%s' WHERE dni='%s'", nuevaContrasena, dni);
-        rc = sqlite3_exec(db, sql, callback, NULL, NULL);
-        if (rc != SQLITE_OK) {
-            printf("Error al actualizar la contraseña del cliente: %s\n", sqlite3_errmsg(db));
-            sqlite3_close_v2(db);
-            return;
-        }
-
-        printf("Contraseña actualizada con éxito.\n");
-        break;
-    }
-    case '2': {
-        // Pedir la nueva dirección al usuario
-        char nuevaDireccion[200];
-
-        printf("\nIngrese su nueva dirección: ");
-        fgets(nuevaDireccion, 200, stdin);
-        nuevaDireccion[strcspn(nuevaDireccion, "\r\n")] = 0;
-
-        // Actualiza la dirección del cliente en la base de datos
-        snprintf(sql, sizeof(sql), "UPDATE cliente SET direccion_casa='%s' WHERE dni='%s'", nuevaDireccion, dni);
-        rc = sqlite3_exec(db, sql, callback, NULL, NULL);
-        if (rc != SQLITE_OK) {
-            printf("Error al actualizar la dirección del cliente: %s\n", sqlite3_errmsg(db));
-            sqlite3_close_v2(db);
-            return;
-        }
-
-        printf("Dirección actualizada con éxito.\n");
-        break;
-    }
-    case '3': {
-        // Pedir el nuevo correo electrónico al usuario
-        char nuevoCorreo[100];
-
-        printf("\nIngrese su nuevo correo electrónico: ");
-        fgets(nuevoCorreo, 100, stdin);
-        nuevoCorreo[strcspn(nuevoCorreo, "\r\n")] = 0;
-
-        // Actualiza el correo electrónico del cliente en la base de datos
-        snprintf(sql, sizeof(sql), "UPDATE cliente SET correo_electronico='%s' WHERE dni='%s'", nuevoCorreo, dni);
-        rc = sqlite3_exec(db, sql, callback, NULL, NULL);
-        if (rc != SQLITE_OK) {
-            printf("Error al actualizar el correo electrónico del cliente: %s\n", sqlite3_errmsg(db));
-            sqlite3_close_v2(db);
-            return;
-        }
-
-        printf("Correo electrónico actualizado con éxito.\n");
-        break;
-    }
-    case '4': {
-        // Salir del menú
-        printf("\nSaliendo del menú de actualización de datos.\n");
-        break;
-    }
-    default: {
-        printf("Opción inválida. Por favor, ingrese una opción válida.\n");
-        break;
-    }
-}
-
-sqlite3_close_v2(db);
+// Cierra la conexión con la base de datos
+sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+sqlite3_close(db);
 }
