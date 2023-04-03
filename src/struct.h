@@ -4,7 +4,7 @@
 typedef struct {
 char dni [10];
 char correo [80];
-char num_tarjeta [8];
+char num_tarjeta [16];
 char direccion[80];
 char contrasena[20];
 char nombre[15];
