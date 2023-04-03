@@ -9,7 +9,7 @@ void agregarCliente();
 void eliminarCliente();
 void imprimirCompras();
 int calcularImporte(int cantidad, int cod_prod) ;
-void listaProductosProveedor();
+int callback(void *data, int argc, char **argv, char **azColName);
 void realizarPedido();
 void actualizarDatosCliente();
 

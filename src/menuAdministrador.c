@@ -32,7 +32,6 @@ void admin_menu() {
             case 3:
                 // añadir productos mediante compras a los proveedores
                 printf("Hacer compra a proveedores\n");
-                listaProductosProveedor();
                 realizarPedido();
                 break;
             case 4:
