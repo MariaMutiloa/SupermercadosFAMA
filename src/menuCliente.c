@@ -4,7 +4,6 @@
 	#include "../bd/data/getData.h"
 
 		int opc = 0;
-		int his = 0;
 
 	void menu(){
 			printf(" ================\n");
