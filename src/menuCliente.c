@@ -44,7 +44,7 @@
 
 					do{
 						system("cls");
-						imprimirCompras();
+						imprimirComprasCliente();
 						break;
 					}while(opc != 7);
 

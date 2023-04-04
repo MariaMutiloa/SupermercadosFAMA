@@ -12,5 +12,6 @@ int calcularImporte(int cantidad, int cod_prod) ;
 void realizarPedido();
 void realizarCompra();
 void actualizarDatosCliente();
+imprimirComprasCliente();
 
 #endif
