@@ -35,6 +35,7 @@ int validarCliente(char dni[], char contrasena[]) {
         return 0;
     }
     sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+    sqlite3_finalize(stmt);
     closeConn(db);
 }
 
@@ -42,7 +43,6 @@ int validarCliente(char dni[], char contrasena[]) {
 int validarAdministrador(char dni[], char contrasena[]) {
     usleep(10000);
     db=startConn();
-    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
     // Preparar la consulta SQL
     char sql[200];
     snprintf(sql, sizeof(sql), "SELECT * FROM administrador WHERE dni='%s' AND contrasena='%s'", dni, contrasena);
@@ -64,7 +64,7 @@ int validarAdministrador(char dni[], char contrasena[]) {
         // El usuario no existe o la contraseña es incorrecta
         return 0;
     }
-    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+    sqlite3_finalize(stmt);
     closeConn(db);
 }
 
@@ -74,7 +74,6 @@ void agregarCliente() {
     Cliente cliente;
       usleep(10000);
     db = startConn();
-    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
     printf("Ingrese los siguientes datos del cliente:\n");
 
     printf("DNI letra incluida: ");
@@ -138,7 +137,6 @@ void agregarCliente() {
     }
 
     sqlite3_finalize(stmt);
-    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
     closeConn(db);
 
     printf("Cliente agregado exitosamente a la base de datos\n");
