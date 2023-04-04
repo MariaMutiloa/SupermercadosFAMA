@@ -521,3 +521,136 @@ if (rc != SQLITE_OK) {
 sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
 sqlite3_close(db);
 }
+
+ void realizarCompra(){
+        
+        usleep(10000); // pausa de 10 milisegundos
+        db=startConn();
+        sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+        char respuesta;
+        char dni[20];
+        int cod_ped, importe, pagado, cantidad_total = 0;
+        int cod_prod, cantidad;
+        char descripcion[100], nom_clien[100];
+        sqlite3_stmt *stmt;
+        int cantidad_disponible;
+      //  int importes;
+
+        // Muestra la lista de productos del proveedor
+        printf("Productos disponibles:\n");
+        printf("--------------------------------\n");
+        if(sqlite3_prepare_v2(db, "SELECT cod_prod, descripcion, importe FROM productos", strlen("SELECT cod_prod, descripcion, importe FROM productos")+1, &stmt, NULL) != SQLITE_OK){
+            fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+            return;
+        }
+        while(sqlite3_step(stmt) != SQLITE_DONE){
+            printf("%d - %s: %d euros %d unidades \n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2), sqlite3_column_int(stmt, 3), sqlite3_column_int(stmt, 4));
+        }
+        sqlite3_finalize(stmt);
+
+        // Pedir al usuario que elija un producto y la cantidad
+       
+            printf("¿Qué producto quiere comprar? (introduzca el código): ");
+            scanf("%d", &cod_prod);
+
+             if(sqlite3_prepare_v2(db, "SELECT cantidad FROM productos WHERE cod_prod = ?", -1, &stmt, NULL) != SQLITE_OK){
+             fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+            return;
+        }
+
+            sqlite3_bind_int(stmt, 1, cod_prod);
+            if(sqlite3_step(stmt) == SQLITE_ROW){
+                cantidad_disponible = sqlite3_column_int(stmt, 0);
+            
+        }
+            sqlite3_finalize(stmt);
+
+
+    int continuar = 1;
+    while(continuar){
+            printf("¿Cuántas unidades quiere comprar? ");
+            scanf("%d", cantidad);
+            while(cantidad < 0 || cantidad > cantidad_disponible){
+                printf("¿Cuántas unidades quiere comprar? ");
+                scanf("%d", &cantidad);
+                fflush(stdin);
+            }
+
+            // Actualiza la cantidad del producto en la tabla productos
+            switch(sqlite3_prepare_v2(db, "UPDATE productos SET cantidad = cantidad - ? WHERE cod_prod IN (SELECT cod_prod FROM productos WHERE cod_prod = ?)",strlen("UPDATE productos SET cantidad = cantidad - ? WHERE cod_prod IN (SELECT cod_prod FROM productos WHERE cod_prod = ?)")+1, &stmt, NULL)){
+                case SQLITE_OK:
+                    sqlite3_bind_int(stmt, 1, cantidad);
+                    sqlite3_bind_int(stmt, 2, cod_prod);
+
+                    if(sqlite3_step(stmt) == SQLITE_DONE){
+                        cantidad_total -= cantidad;
+                        printf("¿Quiere pedir otro comprar? (s/n) ");
+                        scanf(" %c", &respuesta);
+                        if(respuesta == 'n'){
+                            continuar = 0;
+                        }
+                    } else {
+                        printf("Error en la actualización de la cantidad de productos\n");
+                        fprintf(stderr, "Error updating data: %s\n", sqlite3_errmsg(db));
+                        continuar = 0;
+                    }
+                    sqlite3_finalize(stmt);
+                    break;
+                default:
+                    printf("Error en la preparación de la consulta\n");
+                    fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+                    continuar = 0;
+                    break;
+            }
+    }
+
+
+        // Genera un código de pedido único
+        switch(sqlite3_prepare_v2(db, "SELECT MAX(cod_ped) FROM pedidoCliente", -1, &stmt, NULL)){
+            case SQLITE_OK:
+                if(sqlite3_step(stmt) == SQLITE_ROW){
+                    cod_ped = sqlite3_column_int(stmt, 0) + 1;
+                } else {
+                    cod_ped = 1;
+                }
+                sqlite3_finalize(stmt);
+                break;
+            default:
+                printf("Error en la preparación de la consulta\n");
+                fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+                return;
+        }
+
+      // Pedir el DNI del comprador
+        printf("Introduzca su DNI: ");
+        scanf("%s", dni);
+        fflush(stdin);
+
+
+    // Genera un registro de pedido único
+    switch(sqlite3_prepare_v2(db, "INSERT INTO pedidoCliente(cod_ped, dni,importe, pagado) VALUES(?, ?, ?, 0)", strlen("INSERT INTO pedidoCliente(cod_ped, dni, importe, pagado) VALUES(?, ?, ?, 0)")+1, &stmt, NULL)){
+        //al principio siempre pagado será 0 ya que se paga a 3 meses.
+        case SQLITE_OK:
+            sqlite3_bind_int(stmt, 1, cod_ped);
+            sqlite3_bind_text(stmt, 2, dni, strlen(dni), SQLITE_TRANSIENT);
+            int importes = calcularImporte(cantidad,cod_prod);
+            sqlite3_bind_int(stmt, 3, importes);
+
+            if(sqlite3_step(stmt) == SQLITE_DONE){
+                printf("La comrpa se ha registrado correctamente\n");
+            } else {
+                printf("Error al registrar el compra\n");
+                fprintf(stderr, "Error updating data: %s\n", sqlite3_errmsg(db));
+            }
+            sqlite3_finalize(stmt);
+            break;
+        default:
+            printf("Error en la preparación de la consulta\n");
+            fprintf(stderr, "Error preparing statement: %s\n", sqlite3_errmsg(db));
+            return;
+    }
+
+
+    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+    closeConn(db);
+    }
