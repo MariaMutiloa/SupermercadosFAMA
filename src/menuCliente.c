@@ -1,5 +1,7 @@
 	#include <stdio.h>
-		#include <stdlib.h>
+	#include <stdlib.h>
+	#include "menuCliente.h"
+	#include "../bd/data/getData.h"
 
 		int opc = 0;
 		int his = 0;
@@ -16,19 +18,7 @@
 			scanf("%d", &opc);
 	}
 
-
-	void historial (){
-			printf(" ================\n");
-			printf(" TU HISTORIAL\n");
-			printf(" ================\n\n");
-			printf(" 1. Ver mi Historial \n");
-			printf(" 2. Atras \n");
-			printf(" Que quieres hacer? ");
-			scanf("%d", &his);
-	}
-	
-
-		
+			
 		void cliente_menu(){
 
 		do{
@@ -55,7 +45,7 @@
 
 					do{
 						system("cls");
-						historial();
+						imprimirCompras();
 						break;
 					}while(opc != 7);
 
