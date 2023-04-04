@@ -28,6 +28,7 @@ sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
     if (validarCliente(dni, contrasena)) {
         sqlite3_close(db);
         printf("Bienvenido, cliente!\n");
+        menu_cliente();
 
        
     } else if (validarAdministrador(dni, contrasena)) {
