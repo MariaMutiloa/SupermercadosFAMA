@@ -76,3 +76,4 @@ void Persona:: setDni(){
 void Persona:: setCorreo(){
     this-> correo= correo;
 }
+
