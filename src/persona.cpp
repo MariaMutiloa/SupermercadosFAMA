@@ -11,6 +11,7 @@ Persona:: Persona(){
     this->contrasena= nullptr;
     this->correo=nullptr;
 }
+
 Persona::Persona(char* nombre, char* apellido, char* dni, char* correo, char* contrasena )
 {
     this->nombre = new char[strlen(nombre) + 1];
@@ -24,6 +25,7 @@ Persona::Persona(char* nombre, char* apellido, char* dni, char* correo, char* co
     this->contrasena= new char[strlen(contrasena)+1];
     strcpy(this->contrasena, contrasena);
 }
+
 Persona::~Persona()
 {
     delete[] nombre;
@@ -32,10 +34,12 @@ Persona::~Persona()
     delete[] correo;
     delete[] contrasena;
 }
+
 char* Persona::getNombre()
 {
     return this->nombre;
 }
+
  char* Persona:: getApellido()
 {
     return this->apellido;
