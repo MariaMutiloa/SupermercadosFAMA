@@ -18,14 +18,13 @@ Cliente :: Cliente (char* tarjeta, char* direccion)
     strcpy(this->direccion, direccion);
 }
 
-
-Cliente::~Cliente()
+Cliente ::~Cliente()
 {
     delete[] tarjeta;
     delete[] direccion;
 }
 
-char* Cliente ::getTarjeta()
+char* Cliente:: getTarjeta()
 {
     return this->tarjeta;
 }
@@ -41,4 +40,9 @@ void Cliente:: setTarjeta(){
 
 void Cliente:: setDireccion(){
     this->direccion = direccion;
+}
+
+void ImprimirPersona(Cliente cliente){
+    std::cout << "Su nombre es"<<(cliente.getNombre())<<endl;
+    std::cout << "Se apellida"<<(cliente.getApellido())<<endl;
 }
