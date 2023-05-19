@@ -10,7 +10,7 @@ char* tarjeta;
 char* direccion;
 public:
 Cliente();
-Cliente :: Cliente(char* tarjeta, char* direccion);
+Cliente :: Cliente(char* nombre, char* apellido, char* dni, char* correo, char* contrasena, char* tarjeta, char* direccion): Persona(char* nombre, char* apellido, char* dni, char* correo, char* contrasena);
 char* getTarjeta();
 char* getDireccion();
 void setTarjeta();

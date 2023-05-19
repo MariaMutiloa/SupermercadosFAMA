@@ -10,7 +10,7 @@ Cliente :: Cliente(){
     this->direccion=nullptr;
 }
 
-Cliente :: Cliente (char* tarjeta, char* direccion)
+Cliente :: Cliente (char* nombre, char* apellido, char* dni, char* correo, char* contrasena, char* tarjeta, char* direccion)
 {
     this->tarjeta = new char[strlen(tarjeta) + 1];
     strcpy(this->tarjeta, tarjeta);
