@@ -1,48 +1,48 @@
-#include "persona.h"
-#include "cliente.h"
-#include <iostream>
-using namespace std;
-#include <string.h>
-#include <stdlib.h>
+#include "Cliente.h"
 
-Cliente :: Cliente(){
-    this->tarjeta=nullptr;
-    this->direccion=nullptr;
+Cliente::Cliente() : Persona(){
+    num_tarjeta = nullptr;
+    direccion = nullptr;
+} 
+
+Cliente::Cliente(const char* nombre, const char* apellido, const char* dni, const char* contrasena, const char* correo,
+    const char* num_tarjeta, const char* direccion) : Persona(nombre, apellido, dni, contrasena, correo){
+    setNumTarjeta(num_tarjeta);
+    setDireccion(direccion);
 }
 
-Cliente :: Cliente (char* nombre, char* apellido, char* dni, char* correo, char* contrasena, char* tarjeta, char* direccion)
-{
-    this->tarjeta = new char[strlen(tarjeta) + 1];
-    strcpy(this->tarjeta, tarjeta);
-    this->direccion= new char[strlen(direccion)+1];
-    strcpy(this->direccion, direccion);
+Cliente::Cliente(const Cliente& otroCliente) : Persona(otroCliente) {
+    setNumTarjeta(otroCliente.num_tarjeta);
+    setDireccion(otroCliente.direccion);
 }
 
-Cliente ::~Cliente()
-{
-    delete[] tarjeta;
+Cliente::~Cliente() {
+    delete[] num_tarjeta;
     delete[] direccion;
 }
 
-char* Cliente:: getTarjeta()
-{
-    return this->tarjeta;
+const char* Cliente::getNumTarjeta() const {
+    return num_tarjeta;
 }
 
- char* Cliente:: getDireccion()
-{
-    return this->direccion;
+const char* Cliente::getDireccion() const {
+    return direccion;
 }
 
-void Cliente:: setTarjeta(){
-    this->tarjeta = tarjeta;
+void Cliente::setNumTarjeta(const char* num_tarjeta) {
+    delete[] this->num_tarjeta;
+    this->num_tarjeta = new char[strlen(num_tarjeta) + 1];
+    strcpy(this->num_tarjeta, num_tarjeta);
 }
 
-void Cliente:: setDireccion(){
-    this->direccion = direccion;
+void Cliente::setDireccion(const char* direccion) {
+    delete[] this->direccion;
+    this->direccion = new char[strlen(direccion) + 1];
+    strcpy(this->direccion, direccion);
 }
 
-void ImprimirPersona(Cliente cliente){
-    std::cout << "Su nombre es"<<(cliente.getNombre())<<endl;
-    std::cout << "Se apellida"<<(cliente.getApellido())<<endl;
+void Cliente::imprimirCliente() {
+    std::cout << "Nombre: " << getNombre() << std::endl;
+    std::cout << "Apellido: " << getApellido() << std::endl;
+    std::cout << "DNI: " << getDNI() << std::endl;
 }

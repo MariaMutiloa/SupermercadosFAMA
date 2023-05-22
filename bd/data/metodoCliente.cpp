@@ -6,6 +6,8 @@
 #include "metodoCliente.h"
 #include "sockets.h"
 #include <limits>
+#include"../../src/cliente.h"
+using namespace std;
 
 void actualizarDatosCliente() {
 
@@ -20,16 +22,16 @@ void actualizarDatosCliente() {
     char opcion[10];
     char sql[200];
 
-    std::cout << "Ingrese su DNI: ";
-    std::cin.getline(dni, 20);
+    cout << "Ingrese su DNI: ";
+    cin.getline(dni, 20);
 
-    std::cout << "Ingrese su contraseña: ";
-    std::cin.getline(contrasena, 50);
+    cout << "Ingrese su contraseña: ";
+    cin.getline(contrasena, 50);
 
     // Enviar DNI y contraseña al servidor
     std::string data = std::string(dni) + " " + std::string(contrasena);
     if (send(socketFD, data.c_str(), data.length(), 0) == -1) {
-        std::cerr << "Error al enviar los datos al servidor." << std::endl;
+        cerr << "Error al enviar los datos al servidor." << endl;
         return;
     }
 
@@ -37,104 +39,104 @@ void actualizarDatosCliente() {
     char response[256];
     memset(response, 0, sizeof(response));
     if (recv(socketFD, response, sizeof(response), 0) == -1) {
-        std::cerr << "Error al recibir la respuesta del servidor." << std::endl;
+        cerr << "Error al recibir la respuesta del servidor." << endl;
         return;
     }
 
-    std::cout << response << std::endl;
+    cout << response <<endl;
 
     // Verificar la existencia del DNI y contraseña en la base de datos
     if (strcmp(response, "OK") != 0) {
-        std::cout << "El DNI o contraseña ingresados son incorrectos." << std::endl;
+        cout << "El DNI o contraseña ingresados son incorrectos." << endl;
         return;
     }
 
     // Actualizar la información del cliente
     while (true) {
-        std::cout << "¿Qué dato desea actualizar?" << std::endl;
-        std::cout << "1. Contraseña" << std::endl;
-        std::cout << "2. Dirección de casa" << std::endl;
-        std::cout << "3. Correo electrónico" << std::endl;
-        std::cout << "4. Salir" << std::endl;
-        std::cout << "Ingrese el número de la opción que desee: ";
-        std::cin.getline(opcion, 10);
+        cout << "¿Qué dato desea actualizar?" << endl;
+        cout << "1. Contraseña" << endl;
+        cout << "2. Dirección de casa" <<endl;
+        cout << "3. Correo electrónico" <<endl;
+        cout << "4. Salir" << endl;
+        cout << "Ingrese el número de la opción que desee: ";
+        cin.getline(opcion, 10);
 
         if (strcmp(opcion, "1") == 0) {
             char nuevaContrasena[50];
             char confirmacion[50];
 
-            std::cout << "Ingrese su nueva contraseña: ";
-            std::cin.getline(nuevaContrasena, 50);
-            std::cout << "Confirme su nueva contraseña: ";
-            std::cin.getline(confirmacion, 50);
+            cout << "Ingrese su nueva contraseña: ";
+            cin.getline(nuevaContrasena, 50);
+            cout << "Confirme su nueva contraseña: ";
+            cin.getline(confirmacion, 50);
 
             // Verifica que las contraseñas coincidan
             if (strcmp(nuevaContrasena, confirmacion) != 0) {
-                std::cout << "Las contraseñas no coinciden, intente nuevamente." << std::endl;
+                cout << "Las contraseñas no coinciden, intente nuevamente." << endl;
                 continue;
             }
 
             // Actualiza la contraseña
             sprintf(sql, "UPDATE cliente SET contrasena = '%s' WHERE dni = '%s'", nuevaContrasena, dni);
             if (send(socketFD, sql, strlen(sql), 0) == -1) {
-                std::cerr << "Error al enviar la consulta al servidor." << std::endl;
+                cerr << "Error al enviar la consulta al servidor." << endl;
                 return;
             }
 
             memset(response, 0, sizeof(response));
             if (recv(socketFD, response, sizeof(response), 0) == -1) {
-                std::cerr << "Error al recibir la respuesta del servidor." << std::endl;
+                cerr << "Error al recibir la respuesta del servidor." << endl;
                 return;
             }
 
-            std::cout << response << std::endl;
+            cout << response << endl;
 
         } else if (strcmp(opcion, "2") == 0) {
             char nuevaDireccion[100];
 
-            std::cout << "Ingrese su nueva dirección: ";
-            std::cin.getline(nuevaDireccion, 100);
+            cout << "Ingrese su nueva dirección: ";
+            cin.getline(nuevaDireccion, 100);
 
             // Actualiza la dirección en la base de datos
             sprintf(sql, "UPDATE cliente SET Direccion_Domicilio = '%s' WHERE dni = '%s'", nuevaDireccion, dni);
             if (send(socketFD, sql, strlen(sql), 0) == -1) {
-                std::cerr << "Error al enviar la consulta al servidor." << std::endl;
+                cerr << "Error al enviar la consulta al servidor." << endl;
                 return;
             }
 
             memset(response, 0, sizeof(response));
             if (recv(socketFD, response, sizeof(response), 0) == -1) {
-                std::cerr << "Error al recibir la respuesta del servidor." << std::endl;
+                cerr << "Error al recibir la respuesta del servidor." << endl;
                 return;
             }
 
-            std::cout << response << std::endl;
+            cout << response << endl;
 
         } else if (strcmp(opcion, "3") == 0) {
             char nuevoCorreo[50];
 
-            std::cout << "Ingrese su nuevo correo electrónico: ";
-            std::cin.getline(nuevoCorreo, 50);
+            cout << "Ingrese su nuevo correo electrónico: ";
+            cin.getline(nuevoCorreo, 50);
 
             // Actualiza el correo electrónico en la base de datos
             sprintf(sql, "UPDATE cliente SET Correo_electronico = '%s' WHERE dni = '%s'", nuevoCorreo, dni);
             if (send(socketFD, sql, strlen(sql), 0) == -1) {
-                std::cerr << "Error al enviar la consulta al servidor." << std::endl;
+                cerr << "Error al enviar la consulta al servidor." << endl;
                 return;
             }
 
             memset(response, 0, sizeof(response));
             if (recv(socketFD, response, sizeof(response), 0) == -1) {
-                std::cerr << "Error al recibir la respuesta del servidor." << std::endl;
+                cerr << "Error al recibir la respuesta del servidor." << endl;
                 return;
             }
 
-            std::cout << response << std::endl;
+            cout << response << endl;
 
         } else if (strcmp(opcion, "4") == 0) {
             break;
         } else {
-            std::cout << "Opción inválida, intente nuevamente." << std::endl;
+            cout << "Opción inválida, intente nuevamente." << endl;
         }
     }
 
@@ -153,35 +155,35 @@ void realizarCompra(int socketFD) {
 
     // Conectarse al servidor de la base de datos
     if (connectToServer() == -1) {
-        std::cerr << "Error al conectarse al servidor de la base de datos." << std::endl;
+        cerr << "Error al conectarse al servidor de la base de datos." << endl;
         return;
     }
 
     // Lista los productos disponibles
-    std::cout << "Productos disponibles:" << std::endl;
-    std::cout << "--------------------------------" << std::endl;
+    cout << "Productos disponibles:" << endl;
+    cout << "--------------------------------" << endl;
     std::string sql = "SELECT cod_prod, descripcion, importe, cantidad FROM productos";
     if (send(socketFD, sql.c_str(), sql.length(), 0) == SOCKET_ERROR) {
-        std::cerr << "Error al enviar la consulta al servidor de la base de datos." << std::endl;
+        cerr << "Error al enviar la consulta al servidor de la base de datos." << endl;
         return;
     }
 
     char response[256];
     memset(response, 0, sizeof(response));
     if (recv(socketFD, response, sizeof(response), 0) == SOCKET_ERROR) {
-        std::cerr << "Error al recibir la respuesta del servidor de la base de datos." << std::endl;
+        cerr << "Error al recibir la respuesta del servidor de la base de datos." << endl;
         return;
     }
 
-    std::cout << response;
+    cout << response;
 
     // Pedir al usuario que elija un producto y cantidad
-    std::cout << "¿Qué producto quiere comprar? (introduzca el código): ";
-    std::cin >> cod_prod;
+    cout << "¿Qué producto quiere comprar? (introduzca el código): ";
+    cin >> cod_prod;
 
     sql = "SELECT cantidad FROM productos WHERE cod_prod = " + std::to_string(cod_prod);
     if (send(socketFD, sql.c_str(), sql.length(), 0) == SOCKET_ERROR) {
-        std::cerr << "Error al enviar la consulta al servidor de la base de datos." << std::endl;
+        cerr << "Error al enviar la consulta al servidor de la base de datos." <<endl;
         return;
     }
 
@@ -193,30 +195,30 @@ void realizarCompra(int socketFD) {
 
     cantidad_disponible = atoi(response);
     if (cantidad_disponible == 0) {
-        std::cout << "El producto seleccionado no está disponible." << std::endl;
+        cout << "El producto seleccionado no está disponible." << endl;
         return;
     }
 
     int continuar = 1;
     while (continuar == 1) {
-        std::cout << "¿Cuántas unidades quiere comprar? ";
-        std::cin >> cantidad;
+        cout << "¿Cuántas unidades quiere comprar? ";
+        cin >> cantidad;
         while (cantidad < 0 || cantidad > cantidad_disponible) {
-            std::cout << "Cantidad no válida. ¿Cuántas unidades quiere comprar? ";
-            std::cin >> cantidad;
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            cout << "Cantidad no válida. ¿Cuántas unidades quiere comprar? ";
+            cin >> cantidad;
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
 
         // Actualiza la cantidad del producto
         sql = "UPDATE productos SET cantidad = cantidad - " + std::to_string(cantidad) + " WHERE cod_prod = " + std::to_string(cod_prod);
         if (send(socketFD, sql.c_str(), sql.length(), 0) == SOCKET_ERROR) {
-            std::cerr << "Error al enviar la consulta al servidor de la base de datos." << std::endl;
+            cerr << "Error al enviar la consulta al servidor de la base de datos." << endl;
             return;
         }
 
         memset(response, 0, sizeof(response));
         if (recv(socketFD, response, sizeof(response), 0) == SOCKET_ERROR) {
-            std::cerr << "Error al recibir la respuesta del servidor de la base de datos." << std::endl;
+            cerr << "Error al recibir la respuesta del servidor de la base de datos." << endl;
             return;
         }
 
@@ -225,35 +227,35 @@ void realizarCompra(int socketFD) {
         // Calcular el importe de la compra
         sql = "SELECT importe FROM productos WHERE cod_prod = " + std::to_string(cod_prod);
         if (send(socketFD, sql.c_str(), sql.length(), 0) == SOCKET_ERROR) {
-            std::cerr << "Error al enviar la consulta al servidor de la base de datos." << std::endl;
+            cerr << "Error al enviar la consulta al servidor de la base de datos." << endl;
             return;
         }
 
         memset(response, 0, sizeof(response));
         if (recv(socketFD, response, sizeof(response), 0) == SOCKET_ERROR) {
-            std::cerr << "Error al recibir la respuesta del servidor de la base de datos." << std::endl;
+            cerr << "Error al recibir la respuesta del servidor de la base de datos." << endl;
             return;
         }
 
         importe = atoi(response);
 
         // Realizar el pedido
-        std::cout << "Introduzca su DNI: ";
-        std::cin >> dni;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cout << "Introduzca su DNI: ";
+        cin >> dni;
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-        std::cout << "Introduzca su nombre: ";
-        std::cin.getline(nom_clien, sizeof(nom_clien));
+        cout << "Introduzca su nombre: ";
+        cin.getline(nom_clien, sizeof(nom_clien));
 
         sql = "INSERT INTO pedidos (dni, nom_clien, importe) VALUES ('" + std::string(dni) + "', '" + std::string(nom_clien) + "', " + std::to_string(importe * cantidad) + ")";
         if (send(socketFD, sql.c_str(), sql.length(), 0) == SOCKET_ERROR) {
-            std::cerr << "Error al enviar la consulta al servidor de la base de datos." << std::endl;
+            cerr << "Error al enviar la consulta al servidor de la base de datos." << endl;
             return;
         }
 
         memset(response, 0, sizeof(response));
         if (recv(socketFD, response, sizeof(response), 0) == SOCKET_ERROR) {
-            std::cerr << "Error al recibir la respuesta del servidor de la base de datos." << std::endl;
+            cerr << "Error al recibir la respuesta del servidor de la base de datos." << endl;
             return;
         }
 
@@ -262,23 +264,23 @@ void realizarCompra(int socketFD) {
         // Añadir el producto al pedido
         sql = "INSERT INTO productos_pedidos (cod_ped, cod_prod, cantidad) VALUES (" + std::to_string(cod_ped) + ", " + std::to_string(cod_prod) + ", " + std::to_string(cantidad) + ")";
         if (send(socketFD, sql.c_str(), sql.length(), 0) == SOCKET_ERROR) {
-            std::cerr << "Error al enviar la consulta al servidor de la base de datos." << std::endl;
+            cerr << "Error al enviar la consulta al servidor de la base de datos." << endl;
             return;
         }
 
         memset(response, 0, sizeof(response));
         if (recv(socketFD, response, sizeof(response), 0) == SOCKET_ERROR) {
-            std::cerr << "Error al recibir la respuesta del servidor de la base de datos." << std::endl;
+            cerr << "Error al recibir la respuesta del servidor de la base de datos." <<endl;
             return;
         }
 
-        std::cout << response;
+        cout << response;
 
         cantidad_total += cantidad;
 
-        std::cout << "¿Desea comprar otro producto? (S/N): ";
-        std::cin >> respuesta;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cout << "¿Desea comprar otro producto? (S/N): ";
+        cin >> respuesta;
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         if (respuesta != 'S' && respuesta != 's') {
             continuar = 0;
@@ -288,20 +290,69 @@ void realizarCompra(int socketFD) {
     // Actualizar el total pagado en el pedido
     sql = "UPDATE pedidos SET pagado = " + std::to_string(importe * cantidad_total) + " WHERE cod_ped = " + std::to_string(cod_ped);
     if (send(socketFD, sql.c_str(), sql.length(), 0) == SOCKET_ERROR) {
-        std::cerr << "Error al enviar la consulta al servidor de la base de datos." << std::endl;
+        cerr << "Error al enviar la consulta al servidor de la base de datos." << endl;
         return;
     }
 
     memset(response, 0, sizeof(response));
     if (recv(socketFD, response, sizeof(response), 0) == SOCKET_ERROR) {
-        std::cerr << "Error al recibir la respuesta del servidor de la base de datos." << std::endl;
+        cerr << "Error al recibir la respuesta del servidor de la base de datos." << endl;
         return;
     }
 
-    std::cout << response;
+    cout << response;
 
     // Cerrar la conexión con el servidor de la base de datos
     closesocket(socketFD);
+}
+
+//pasar el metodo a cpp con la creacion de sockets
+void imprimirComprasCliente() {
+    Cliente cliente;
+    printf("DNI letra incluida: ");
+    fgets(cliente.dni, sizeof(cliente.dni), stdin);
+    sscanf(cliente.dni, "%s", cliente.dni);
+
+    char *query = "SELECT c.Nombre, c.Apellido, p.Cod_ped, p.Importe, GROUP_CONCAT(pr.cod_prod || ' - ' || pr.descripcion, '; ') as Productos \
+                   FROM cliente c, pedidoCliente p, prdidoCliente_productos pp, productos pr \
+                   WHERE c.dni = c.dni AND p.dni = c.dni AND p.Cod_ped = pp.cod_ped AND pp.cod_prod = pr.cod_prod \
+                   GROUP BY c.Nombre, c.Apellido, p.Cod_ped";
+
+    sqlite3_stmt *stmt;
+
+    int rc = sqlite3_prepare_v2(db ,query, -1, &stmt, NULL);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Error en la preparación  del statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    printf(" ================\n");
+    printf(" TUS COMPRAS:\n");
+    printf(" ================\n\n");
+
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        char *nombre = (char *)sqlite3_column_text(stmt, 0);
+        char *apellido = (char *)sqlite3_column_text(stmt, 1);
+        int cod_ped = sqlite3_column_int(stmt, 2);
+        int importe = sqlite3_column_int(stmt, 3);
+        char *productos = (char *)sqlite3_column_text(stmt, 4);
+
+        printf("Cliente: %s %s\n", nombre, apellido);
+        printf("Codigo de pedido: %d\n", cod_ped);
+        printf("Productos: %s\n", productos);
+        printf("Importe: %d\n\n", importe);
+    }
+
+    if (rc != SQLITE_DONE) {
+        fprintf(stderr, "Error en la ejecucion de la consulta: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_finalize(stmt);
+    // Cerrar la conexión con el servidor de la base de datos
+    closesocket(socketFD); //da error porque queda crear el socket al principio
 }
 
 

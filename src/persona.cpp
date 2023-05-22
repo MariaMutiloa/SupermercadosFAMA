@@ -1,79 +1,115 @@
-#include "persona.h"
 #include <iostream>
-using namespace std;
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include "persona.h"
+class Persona {
+protected:
+    char* nombre;
+    char* apellido;
+    char* dni;
+    char* contrasena;
+    char* correo;
 
-Persona:: Persona(){
-    this->nombre = nullptr;
-    this->apellido= nullptr;
-    this->dni= nullptr;
-    this->contrasena= nullptr;
-    this->correo=nullptr;
-}
+public:
+    Persona() {
+        nombre = nullptr;
+        apellido = nullptr;
+        dni = nullptr;
+        contrasena = nullptr;
+        correo = nullptr;
+    }
 
-Persona::Persona(char* nombre, char* apellido, char* dni, char* correo, char* contrasena )
-{
-    this->nombre = new char[strlen(nombre) + 1];
-    strcpy(this->nombre, nombre);
-    this->apellido= new char[strlen(apellido)+1];
-    strcpy(this->apellido, apellido);
-    this->dni= new char[strlen(dni)+1];
-    strcpy(this->dni, dni);
-    this->correo= new char[strlen(correo)+1];
-    strcpy(this->correo, correo);
-    this->contrasena= new char[strlen(contrasena)+1];
-    strcpy(this->contrasena, contrasena);
-}
+    Persona(const char* nombre, const char* apellido, const char* dni, const char* contrasena, const char* correo) {
+        this->nombre = new char[strlen(nombre) + 1];
+        strcpy(this->nombre, nombre);
 
-Persona::~Persona()
-{
-    delete[] nombre;
-    delete[] apellido;
-    delete[] dni;
-    delete[] correo;
-    delete[] contrasena;
-}
+        this->apellido = new char[strlen(apellido) + 1];
+        strcpy(this->apellido, apellido);
 
-char* Persona::getNombre()
-{
-    return this->nombre;
-}
+        this->dni = new char[strlen(dni) + 1];
+        strcpy(this->dni, dni);
 
- char* Persona:: getApellido()
-{
-    return this->apellido;
-}
+        this->contrasena = new char[strlen(contrasena) + 1];
+        strcpy(this->contrasena, contrasena);
 
-char* Persona:: getContrasena(){
-    return this-> contrasena;
-}
+        this->correo = new char[strlen(correo) + 1];
+        strcpy(this->correo, correo);
+    }
 
-char* Persona ::getDni(){
-    return this-> dni;
-}
+    Persona(const Persona& otraPersona) {
+        nombre = new char[strlen(otraPersona.nombre) + 1];
+        strcpy(nombre, otraPersona.nombre);
 
-char* Persona :: getCorreo(){
-    return this-> correo;
-}
+        apellido = new char[strlen(otraPersona.apellido) + 1];
+        strcpy(apellido, otraPersona.apellido);
 
-void Persona:: setNombre(){
-    this->nombre = nombre;
-}
+        dni = new char[strlen(otraPersona.dni) + 1];
+        strcpy(dni, otraPersona.dni);
 
-void Persona:: setApellido(){
-    this->apellido = apellido;
-}
+        contrasena = new char[strlen(otraPersona.contrasena) + 1];
+        strcpy(contrasena, otraPersona.contrasena);
 
-void Persona:: setContrasena(){
-    this->contrasena = contrasena;
-}
+        correo = new char[strlen(otraPersona.correo) + 1];
+        strcpy(correo, otraPersona.correo);
+    }
 
-void Persona:: setDni(){
-    this->dni = dni;
-}
+    virtual ~Persona() {
+        delete[] nombre;
+        delete[] apellido;
+        delete[] dni;
+        delete[] contrasena;
+        delete[] correo;
+    }
 
-void Persona:: setCorreo(){
-    this-> correo= correo;
-}
+    // Getters y setters
+    const char* getNombre() const {
+        return nombre;
+    }
 
+    const char* getApellido() const {
+        return apellido;
+    }
+
+    const char* getDNI() const {
+        return dni;
+    }
+
+    const char* getContrasena() const {
+        return contrasena;
+    }
+
+    const char* getCorreo() const {
+        return correo;
+    }
+
+    void setNombre(const char* nombre) {
+        delete[] this->nombre;
+        this->nombre = new char[strlen(nombre) + 1];
+        strcpy(this->nombre, nombre);
+    }
+
+    void setApellido(const char* apellido) {
+        delete[] this->apellido;
+        this->apellido = new char[strlen(apellido) + 1];
+        strcpy(this->apellido, apellido);
+    }
+
+    void setDNI(const char* dni) {
+        delete[] this->dni;
+        this->dni = new char[strlen(dni) + 1];
+        strcpy(this->dni, dni);
+    }
+
+    void setContrasena(const char* contrasena) {
+        delete[] this->contrasena;
+        this->contrasena = new char[strlen(contrasena) + 1];
+        strcpy(this->contrasena, contrasena);
+    }
+
+    void setCorreo(const char* correo) {
+        delete[] this->correo;
+        this->correo = new char[strlen(correo) + 1];
+        strcpy(this->correo, correo);
+    }
+
+    virtual void imprimirCliente() = 0;  // Método polimórfico puro (clase abstracta)
+};

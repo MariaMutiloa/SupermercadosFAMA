@@ -1,21 +1,24 @@
+#include <iostream>
+#include <cstring>
 #include "persona.h"
 
-#ifndef _CLIETNE_H_
-#define _CLIENTE_H_
-
-class Cliente: public Persona
-{
+class Cliente : public Persona {
 private:
-char* tarjeta;
-char* direccion;
-public:
-Cliente();
-Cliente :: Cliente(char* nombre, char* apellido, char* dni, char* correo, char* contrasena, char* tarjeta, char* direccion): Persona(char* nombre, char* apellido, char* dni, char* correo, char* contrasena);
-char* getTarjeta();
-char* getDireccion();
-void setTarjeta();
-void setDireccion();
-virtual void ImprimirPersona();
-};
+    char* num_tarjeta;
+    char* direccion;
 
-#endif
+public:
+    Cliente();
+    Cliente(const char* nombre, const char* apellido, const char* dni, const char* contrasena, const char* correo,
+            const char* num_tarjeta, const char* direccion);
+    Cliente(const Cliente& otroCliente);
+    ~Cliente();
+
+    const char* getNumTarjeta() const;
+    const char* getDireccion() const;
+
+    void setNumTarjeta(const char* num_tarjeta);
+    void setDireccion(const char* direccion);
+
+    void imprimirCliente();
+};

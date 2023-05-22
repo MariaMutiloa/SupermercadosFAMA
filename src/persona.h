@@ -1,32 +1,33 @@
-#include <iostream>
-using namespace std;
+#ifndef PERSONA_H
+#define PERSONA_H
 
-#ifndef _PERSONA_H_
-#define _PERSONA_H_
+class Persona {
+protected:
+    char* nombre;
+    char* apellido;
+    char* dni;
+    char* contrasena;
+    char* correo;
 
-class Persona
-{
-private:
-char* nombre;
-char* apellido;
-char* dni;
-char* correo;
-char* contrasena;
 public:
-Persona();
-Persona(char* nombre, char* apellido, char* dni, char* correo, char* contrasena);
-~Persona();
-char* getNombre();
-char* getApellido();
-char* getDni();
-char* getCorreo();
-char* getContrasena();
-void setNombre();
-void setApellido();
-void setDni();
-void setCorreo();
-void setContrasena();
-virtual void ImprimirPersona();
+    Persona();
+    Persona(const char* nombre, const char* apellido, const char* dni, const char* contrasena, const char* correo);
+    Persona(const Persona& otraPersona);
+    virtual ~Persona();
+
+    const char* getNombre() const;
+    const char* getApellido() const;
+    const char* getDNI() const;
+    const char* getContrasena() const;
+    const char* getCorreo() const;
+
+    void setNombre(const char* nombre);
+    void setApellido(const char* apellido);
+    void setDNI(const char* dni);
+    void setContrasena(const char* contrasena);
+    void setCorreo(const char* correo);
+
+    virtual void imprimirCliente() = 0;
 };
 
-#endif
+#endif  // PERSONA_H
