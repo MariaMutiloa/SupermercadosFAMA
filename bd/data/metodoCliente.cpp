@@ -13,7 +13,6 @@ void actualizarDatosCliente() {
 
     int socketFD = connectToServer();
     if (socketFD == -1) {
-        // Manejar el error de conexión
         std::cerr << "Error al conectar con el servidor." << std::endl;
         return;
     }
