@@ -302,7 +302,7 @@ void realizarCompra(int socketFD) {
 
     cout << response;
 
-    // Cerrar la conexión con el servidor de la base de datos
+    // Cerrar socket
     closesocket(socketFD);
 }
 
