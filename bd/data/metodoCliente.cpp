@@ -306,45 +306,67 @@ void realizarCompra(int socketFD) {
 }
 
 //pasar el metodo a cpp con la creacion de sockets
-void imprimirComprasCliente() {
-    Cliente cliente;
-    printf("DNI letra incluida: ");
-    fgets(cliente.dni, sizeof(cliente.dni), stdin);
-    sscanf(cliente.dni, "%s", cliente.dni);
+void imprimirComprasCliente(int socketFD) {
+     sqlite3* db;
+    std::string dni;
 
-    char *query = "SELECT c.Nombre, c.Apellido, p.Cod_ped, p.Importe, GROUP_CONCAT(pr.cod_prod || ' - ' || pr.descripcion, '; ') as Productos \
-                   FROM cliente c, pedidoCliente p, prdidoCliente_productos pp, productos pr \
-                   WHERE c.dni = c.dni AND p.dni = c.dni AND p.Cod_ped = pp.cod_ped AND pp.cod_prod = pr.cod_prod \
-                   GROUP BY c.Nombre, c.Apellido, p.Cod_ped";
+     // Conectarse al servidor de la base de datos
+    if (connectToServer() == -1) {
+        cerr << "Error al conectarse al servidor de la base de datos." << endl;
+        return;
+    }
+
+    
+    std::cout << "DNI letra incluida: ";
+    std::getline(std::cin, dni);
+
+    std::string sql = "SELECT c.Nombre, c.Apellido, p.Cod_ped, p.Importe, GROUP_CONCAT(pr.cod_prod || ' - ' || pr.descripcion, '; ') as Productos "
+                        "FROM cliente c, pedidoCliente p, pedidoCliente_productos pp, productos pr "
+                        "WHERE c.dni = p.dni AND p.Cod_ped = pp.cod_ped AND pp.cod_prod = pr.cod_prod "
+                        "GROUP BY c.Nombre, c.Apellido, p.Cod_ped";
+
+    if (send(socketFD, sql.c_str(), sql.length(), 0) == SOCKET_ERROR) {
+        cerr << "Error al enviar la consulta al servidor de la base de datos." << endl;
+        return;
+    }
+
+    char response[256];
+    memset(response, 0, sizeof(response));
+    if (recv(socketFD, response, sizeof(response), 0) == SOCKET_ERROR) {
+        cerr << "Error al recibir la respuesta del servidor de la base de datos." << endl;
+        return;
+    }
+
+    cout << response;
 
     sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
 
-    int rc = sqlite3_prepare_v2(db ,query, -1, &stmt, NULL);
-
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Error en la preparación  del statement: %s\n", sqlite3_errmsg(db));
+    if (rc != SQLITE_OK) { //NO TENGO MUY CLARO PA QUE ES ESTO
+        fprintf(stderr, "Error en la preparación del statement: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
     }
-    printf(" ================\n");
-    printf(" TUS COMPRAS:\n");
-    printf(" ================\n\n");
+
+    std::cout << "================\n";
+    std::cout << "TUS COMPRAS:\n";
+    std::cout << "================\n\n";
 
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-        char *nombre = (char *)sqlite3_column_text(stmt, 0);
-        char *apellido = (char *)sqlite3_column_text(stmt, 1);
+        const char *nombre = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+        const char *apellido = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
         int cod_ped = sqlite3_column_int(stmt, 2);
         int importe = sqlite3_column_int(stmt, 3);
-        char *productos = (char *)sqlite3_column_text(stmt, 4);
+        const char *productos = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
 
-        printf("Cliente: %s %s\n", nombre, apellido);
-        printf("Codigo de pedido: %d\n", cod_ped);
-        printf("Productos: %s\n", productos);
-        printf("Importe: %d\n\n", importe);
+        std::cout << "Cliente: " << nombre << " " << apellido << "\n";
+        std::cout << "Codigo de pedido: " << cod_ped << "\n";
+        std::cout << "Productos: " << productos << "\n";
+        std::cout << "Importe: " << importe << "\n\n";
     }
 
     if (rc != SQLITE_DONE) {
-        fprintf(stderr, "Error en la ejecucion de la consulta: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "Error en la ejecución de la consulta: %s\n", sqlite3_errmsg(db));
         sqlite3_finalize(stmt);
         sqlite3_close(db);
         return;
@@ -352,8 +374,8 @@ void imprimirComprasCliente() {
     sqlite3_finalize(stmt);
     // Cerrar la conexión con el servidor de la base de datos
     closesocket(socketFD); //da error porque queda crear el socket al principio
-}
 
+}
 
 
 
