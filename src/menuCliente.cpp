@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "menuCliente.h"
-#include "../bd/data/getData.h"
+#include "../bd/data/metodoCliente.h"
 
 int opc = 0;
 
