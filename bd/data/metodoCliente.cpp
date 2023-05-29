@@ -10,7 +10,6 @@
 using namespace std;
 
 void actualizarDatosCliente() {
-
     int socketFD = connectToServer();
     if (socketFD == -1) {
         std::cerr << "Error al conectar con el servidor." << std::endl;

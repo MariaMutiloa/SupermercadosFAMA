@@ -1,28 +1,63 @@
+
 #include <iostream>
-#include <mysql_driver.h>
-#include <mysql_connection.h>
+#include <cstring>
+#include <cerrno>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 
 #pragma comment(lib, "ws2_32.lib")
 
-sql::Connection* connectToServer() {
+int iniciarServidor(const std::string& puerto) {
+    // Inicializar Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         std::cerr << "Error al inicializar Winsock." << std::endl;
-        return nullptr;
+        return -1;
     }
 
-    sql::mysql::MySQL_Driver* driver;
-    sql::Connection* con;
+    // Configurar los detalles del servidor
+    std::string serverAddress = "0.0.0.0";  // Escuchar en todas las interfaces de red
 
-    try {
-        driver = sql::mysql::get_mysql_driver_instance();
-        con = driver->connect("tcp://127.0.0.1:3306", "tu_usuario", "tu_contraseña"); //cambiar por las credenciales de nuestra BD
-    } catch (sql::SQLException& e) {
-        std::cerr << "Error al conectar a la base de datos: " << e.what() << std::endl;
+    // Crear el socket
+    SOCKET socketFD = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketFD == INVALID_SOCKET) {
+        std::cerr << "Error al crear el socket: " << WSAGetLastError() << std::endl;
         WSACleanup();
-        return nullptr;
+        return -1;
     }
 
-    return con;
+    // Permitir la reutilización del puerto
+    int yes = 1;
+    if (setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (const char*)&yes, sizeof(yes)) == SOCKET_ERROR) {
+        std::cerr << "Error al configurar el socket: " << WSAGetLastError() << std::endl;
+        closesocket(socketFD);
+        WSACleanup();
+        return -1;
+    }
+
+    // Obtener información del servidor
+    struct sockaddr_in serverInfo;
+    memset(&serverInfo, 0, sizeof(serverInfo));
+    serverInfo.sin_family = AF_INET;
+    serverInfo.sin_addr.s_addr = inet_addr(serverAddress.c_str());
+    serverInfo.sin_port = htons(std::stoi(puerto));
+
+    // Vincular el socket a la dirección y puerto del servidor
+    if (bind(socketFD, (struct sockaddr*)&serverInfo, sizeof(serverInfo)) == SOCKET_ERROR) {
+        std::cerr << "Error al vincular el socket: " << WSAGetLastError() << std::endl;
+        closesocket(socketFD);
+        WSACleanup();
+        return -1;
+    }
+
+    // Escuchar conexiones entrantes
+    if (listen(socketFD, SOMAXCONN) == SOCKET_ERROR) {
+        std::cerr << "Error al escuchar conexiones entrantes: " << WSAGetLastError() << std::endl;
+        closesocket(socketFD);
+        WSACleanup();
+        return -1;
+    }
+
+    return socketFD;
 }
+
