@@ -13,7 +13,7 @@ using namespace std;
 
 void actualizarDatosCliente() {
     ClienteWindows cliente;
-    const char* serverName = "DBS20-031CA2N00"; // Reemplaza con el nombre o la dirección del servidor
+    const char* serverName = "DBS20-031CA2N00";
     int socketFD=cliente.ConnectToServer(serverName);
     if (socketFD == -1) {
         std::cerr << "Error al conectar con el servidor." << std::endl;
@@ -160,7 +160,7 @@ void actualizarDatosCliente() {
 
 
 void realizarCompra() {
-    const char* serverName = "DBS20-031CA2N00"; // Reemplaza con el nombre o la dirección del servidor
+    const char* serverName = "DBS20-031CA2N00"; 
      ClienteWindows cliente;
     int socketFD = cliente.ConnectToServer(serverName);
     
