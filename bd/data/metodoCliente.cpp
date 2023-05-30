@@ -4,15 +4,23 @@
 #include <winsock2.h>
 #include "../sqlite3.h"
 #include "metodoCliente.h"
-#include "sockets.h"
+#include "ClienteWindows.h"
+#include "serverWindows.h"
 #include <limits>
 #include"../../src/cliente.h"
+#include "../conexion/conexion.h"
 using namespace std;
 
 void actualizarDatosCliente() {
-    int socketFD = connectToServer();
+    const char* serverName = "nombre_del_servidor"; // Reemplaza con el nombre o la dirección del servidor
+    int socketFD = ConnectToServer(serverName);
     if (socketFD == -1) {
         std::cerr << "Error al conectar con el servidor." << std::endl;
+        return;
+    }
+     sqlite3* db = startConn();
+    if (db == NULL) {
+        cerr << "Error al establecer la conexión con la base de datos." << endl;
         return;
     }
     char dni[20];
@@ -41,11 +49,12 @@ void actualizarDatosCliente() {
         return;
     }
 
-    cout << response <<endl;
+    cout << response << endl;
 
     // Verificar la existencia del DNI y contraseña en la base de datos
     if (strcmp(response, "OK") != 0) {
         cout << "El DNI o contraseña ingresados son incorrectos." << endl;
+        closesocket(socketFD);
         return;
     }
 
@@ -78,12 +87,14 @@ void actualizarDatosCliente() {
             sprintf(sql, "UPDATE cliente SET contrasena = '%s' WHERE dni = '%s'", nuevaContrasena, dni);
             if (send(socketFD, sql, strlen(sql), 0) == -1) {
                 cerr << "Error al enviar la consulta al servidor." << endl;
+                closesocket(socketFD);
                 return;
             }
 
             memset(response, 0, sizeof(response));
             if (recv(socketFD, response, sizeof(response), 0) == -1) {
                 cerr << "Error al recibir la respuesta del servidor." << endl;
+                closesocket(socketFD);
                 return;
             }
 
@@ -99,12 +110,14 @@ void actualizarDatosCliente() {
             sprintf(sql, "UPDATE cliente SET Direccion_Domicilio = '%s' WHERE dni = '%s'", nuevaDireccion, dni);
             if (send(socketFD, sql, strlen(sql), 0) == -1) {
                 cerr << "Error al enviar la consulta al servidor." << endl;
+                closesocket(socketFD);
                 return;
             }
 
             memset(response, 0, sizeof(response));
             if (recv(socketFD, response, sizeof(response), 0) == -1) {
                 cerr << "Error al recibir la respuesta del servidor." << endl;
+                closesocket(socketFD);
                 return;
             }
 
@@ -120,12 +133,14 @@ void actualizarDatosCliente() {
             sprintf(sql, "UPDATE cliente SET Correo_electronico = '%s' WHERE dni = '%s'", nuevoCorreo, dni);
             if (send(socketFD, sql, strlen(sql), 0) == -1) {
                 cerr << "Error al enviar la consulta al servidor." << endl;
+                closesocket(socketFD);
                 return;
             }
 
             memset(response, 0, sizeof(response));
             if (recv(socketFD, response, sizeof(response), 0) == -1) {
                 cerr << "Error al recibir la respuesta del servidor." << endl;
+                closesocket(socketFD);
                 return;
             }
 
@@ -139,10 +154,31 @@ void actualizarDatosCliente() {
     }
 
     closesocket(socketFD);
+    closeConn(db);
 }
 
-void realizarCompra(int socketFD) {
-    sqlite3* db;
+
+void realizarCompra() {
+    const char* serverName = "nombre_del_servidor"; // Reemplaza con el nombre o la dirección del servidor
+    int socketFD = ConnectToServer(serverName);
+    
+    if (socketFD == -1) {
+        cerr << "Error al conectarse al servidor." << endl;
+        return;
+    }
+
+    // Iniciar el servidor de la base de datos
+    if (RunServer() == -1) {
+        cerr << "Error al iniciar el servidor de la base de datos." << endl;
+        return;
+    }
+
+    sqlite3* db = startConn();
+    if (db == NULL) {
+        cerr << "Error al establecer la conexión con la base de datos." << endl;
+        return;
+    }
+
     sqlite3_stmt* stmt;
     char respuesta;
     char dni[20];
@@ -150,12 +186,6 @@ void realizarCompra(int socketFD) {
     int cod_prod, cantidad;
     char descripcion[100], nom_clien[100];
     int cantidad_disponible;
-
-    // Conectarse al servidor de la base de datos
-    if (connectToServer() == -1) {
-        cerr << "Error al conectarse al servidor de la base de datos." << endl;
-        return;
-    }
 
     // Lista los productos disponibles
     cout << "Productos disponibles:" << endl;
@@ -302,20 +332,36 @@ void realizarCompra(int socketFD) {
 
     // Cerrar socket
     closesocket(socketFD);
+
+    // Cerrar conexión con la base de datos
+    sqlite3_close(db);
 }
 
+
 //pasar el metodo a cpp con la creacion de sockets
-void imprimirComprasCliente(int socketFD) {
-     sqlite3* db;
+void imprimirComprasCliente() {
     std::string dni;
 
-     // Conectarse al servidor de la base de datos
-    if (connectToServer() == -1) {
+    // Conectarse al servidor de la base de datos
+    const char* serverName = "nombre_del_servidor"; // Reemplaza con el nombre o la dirección del servidor
+    int socketFD = ConnectToServer(serverName);
+    if (socketFD == -1) {
         cerr << "Error al conectarse al servidor de la base de datos." << endl;
         return;
     }
 
-    
+    // Iniciar el servidor de la base de datos
+    if (RunServer() == -1) {
+        cerr << "Error al iniciar el servidor de la base de datos." << endl;
+        return;
+    }
+
+    sqlite3* db = startConn();
+    if (db == NULL) {
+        cerr << "Error al establecer la conexión con la base de datos." << endl;
+        return;
+    }
+
     std::cout << "DNI letra incluida: ";
     std::getline(std::cin, dni);
 
@@ -341,7 +387,7 @@ void imprimirComprasCliente(int socketFD) {
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
 
-    if (rc != SQLITE_OK) { //NO TENGO MUY CLARO PA QUE ES ESTO
+    if (rc != SQLITE_OK) {
         fprintf(stderr, "Error en la preparación del statement: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
@@ -370,11 +416,11 @@ void imprimirComprasCliente(int socketFD) {
         sqlite3_close(db);
         return;
     }
+
     sqlite3_finalize(stmt);
+
     // Cerrar la conexión con el servidor de la base de datos
-    closesocket(socketFD); //da error porque queda crear el socket al principio
-
+    closesocket(socketFD);
+    closeConn(db);
 }
-
-
 
