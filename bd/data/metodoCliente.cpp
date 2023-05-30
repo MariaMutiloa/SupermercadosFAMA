@@ -13,7 +13,7 @@ using namespace std;
 
 void actualizarDatosCliente() {
     ClienteWindows cliente;
-    const char* serverName = "nombre_del_servidor"; // Reemplaza con el nombre o la dirección del servidor
+    const char* serverName = "DBS20-031CA2N00"; // Reemplaza con el nombre o la dirección del servidor
     int socketFD=cliente.ConnectToServer(serverName);
     if (socketFD == -1) {
         std::cerr << "Error al conectar con el servidor." << std::endl;
@@ -160,7 +160,7 @@ void actualizarDatosCliente() {
 
 
 void realizarCompra() {
-    const char* serverName = "nombre_del_servidor"; // Reemplaza con el nombre o la dirección del servidor
+    const char* serverName = "DBS20-031CA2N00"; // Reemplaza con el nombre o la dirección del servidor
      ClienteWindows cliente;
     int socketFD = cliente.ConnectToServer(serverName);
     
@@ -346,7 +346,7 @@ void imprimirComprasCliente() {
     std::string dni;
 
     // Conectarse al servidor de la base de datos
-    const char* serverName = "nombre_del_servidor"; // Reemplaza con el nombre o la dirección del servidor
+    const char* serverName = "DBS20-031CA2N00"; 
     ClienteWindows cliente;
     int socketFD = cliente.ConnectToServer(serverName);
     if (socketFD == -1) {
