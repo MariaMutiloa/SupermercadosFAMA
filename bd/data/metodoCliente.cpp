@@ -12,8 +12,9 @@
 using namespace std;
 
 void actualizarDatosCliente() {
+    ClienteWindows cliente;
     const char* serverName = "nombre_del_servidor"; // Reemplaza con el nombre o la dirección del servidor
-    int socketFD = ConnectToServer(serverName);
+    int socketFD=cliente.ConnectToServer(serverName);
     if (socketFD == -1) {
         std::cerr << "Error al conectar con el servidor." << std::endl;
         return;
@@ -160,7 +161,8 @@ void actualizarDatosCliente() {
 
 void realizarCompra() {
     const char* serverName = "nombre_del_servidor"; // Reemplaza con el nombre o la dirección del servidor
-    int socketFD = ConnectToServer(serverName);
+     ClienteWindows cliente;
+    int socketFD = cliente.ConnectToServer(serverName);
     
     if (socketFD == -1) {
         cerr << "Error al conectarse al servidor." << endl;
@@ -168,7 +170,8 @@ void realizarCompra() {
     }
 
     // Iniciar el servidor de la base de datos
-    if (RunServer() == -1) {
+    ServerWindows server;
+    if (server.RunServer() == -1) {
         cerr << "Error al iniciar el servidor de la base de datos." << endl;
         return;
     }
@@ -344,14 +347,16 @@ void imprimirComprasCliente() {
 
     // Conectarse al servidor de la base de datos
     const char* serverName = "nombre_del_servidor"; // Reemplaza con el nombre o la dirección del servidor
-    int socketFD = ConnectToServer(serverName);
+    ClienteWindows cliente;
+    int socketFD = cliente.ConnectToServer(serverName);
     if (socketFD == -1) {
         cerr << "Error al conectarse al servidor de la base de datos." << endl;
         return;
     }
 
     // Iniciar el servidor de la base de datos
-    if (RunServer() == -1) {
+    ServerWindows server;
+    if (server.RunServer() == -1) {
         cerr << "Error al iniciar el servidor de la base de datos." << endl;
         return;
     }

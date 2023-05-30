@@ -20,6 +20,7 @@ void menu()
 
 void cliente_menu()
 {
+    MetodoCliente metodo;
     do
     {
         system("cls");
@@ -30,7 +31,7 @@ void cliente_menu()
                 do
                 {
                     system("cls");
-                    realizarCompra();
+                    metodo.realizarCompra();
                     break;
                 } while (opc != 7);
                 break;
@@ -39,7 +40,7 @@ void cliente_menu()
                 do
                 {
                     system("cls");
-                    actualizarDatosCliente();
+                    metodo.actualizarDatosCliente();
                     break;
                 } while (opc != 7);
                 break;
@@ -48,7 +49,7 @@ void cliente_menu()
                 do
                 {
                     system("cls");
-                    imprimirComprasCliente();
+                    metodo.imprimirComprasCliente();
                     break;
                 } while (opc != 7);
                 break;
@@ -71,8 +72,4 @@ void cliente_menu()
     } while (opc != 7);
 }
 
-int main()
-{
-    cliente_menu();
-    return 0;
-}
+

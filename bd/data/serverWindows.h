@@ -1,6 +1,6 @@
 #ifndef SERVERWINDOS_H
 #define SERVERWINDOWS_H
-class MetodoCliente{
+class ServerWindows{
     public:
 int RunServer();
 };
