@@ -13,8 +13,7 @@ sqlite3* startConn(){
     return db;
 }
 
-void closeConn(sqlite3* db) {
-    if (db) {
-        sqlite3_close_v2(db);
-    }
+int closeConn(sqlite3* db) {
+    return sqlite3_close_v2(db);
+}
 }

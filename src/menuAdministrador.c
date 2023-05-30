@@ -20,22 +20,18 @@ void admin_menu() {
 
         switch (choice) {
             case 1:
-                // añadir clientes a la base de datos
                 printf("Añadir cliente a la base de datos\n");
                 agregarCliente();
                 break;
             case 2:
-                // eliminar cuentas de clientes
                 printf("Eliminar cuenta de cliente\n");
                 eliminarCliente();
                 break;
             case 3:
-                // añadir productos mediante compras a los proveedores
                 printf("Hacer compra a proveedores\n");
                 realizarPedido();
                 break;
             case 4:
-                // visualizar compras realizadas por todos los clientes
                 printf("Visualizar compras realizadas por todos los clientes\n");
                 imprimirCompras();
                 break;
@@ -48,4 +44,6 @@ void admin_menu() {
         }
     } while (choice != 5);
 }
+
+
 

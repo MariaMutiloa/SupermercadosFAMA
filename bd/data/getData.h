@@ -10,8 +10,8 @@ void eliminarCliente();
 void imprimirCompras();
 int calcularImporte(int cantidad, int cod_prod) ;
 void realizarPedido();
-void realizarCompra();
 void actualizarDatosCliente();
-imprimirComprasCliente();
+void realizarCompra();
+void imprimirComprasCliente();
 
 #endif
