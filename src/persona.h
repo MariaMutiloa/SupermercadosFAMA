@@ -30,4 +30,4 @@ public:
     virtual void imprimirCliente() = 0;
 };
 
-#endif  // PERSONA_H
+#endif  

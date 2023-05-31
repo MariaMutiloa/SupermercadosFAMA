@@ -1,9 +1,10 @@
 #ifndef CLIENTEWINDOWS_H
 #define CLIENTEWINDOWS_H
 
-class ClienteWindows {
+class ClienteWindows
+{
 public:
-    int ConnectToServer(const char* serverName);
+    int ConnectToServer(const char *serverName);
 };
 
 #endif

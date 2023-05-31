@@ -1,7 +1,8 @@
 #ifndef SERVERWINDOS_H
 #define SERVERWINDOWS_H
-class ServerWindows{
-    public:
-int RunServer();
+class ServerWindows
+{
+public:
+    int RunServer();
 };
-#endif  
+#endif
